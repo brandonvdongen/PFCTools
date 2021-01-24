@@ -4,7 +4,7 @@ using UnityEditor.Animations;
 using UnityEngine;
 
 namespace Utils.EditorExtension {
-    public class UnfuckButton : Editor {
+    public class EnableWriteDefaults : Editor {
         [MenuItem("Assets/PFCTools/Enable Write Defaults")]
         private static void UnfuckAnimator() {
             AnimatorController fuckedController = Selection.activeObject as AnimatorController;
