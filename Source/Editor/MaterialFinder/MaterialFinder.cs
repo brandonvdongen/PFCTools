@@ -39,8 +39,8 @@ namespace PFCTools.EditorTools {
 
             if (VRCSDK.installed) {
 
-                if(GUILayout.Button("Select Avatar", EditorStyles.toolbarDropDown)) {
-                    if(showAvatarSelector == false) {
+                if (GUILayout.Button("Select Avatar", EditorStyles.toolbarDropDown)) {
+                    if (showAvatarSelector == false) {
                         knownAvatars = VRCSDK.GetAvatars();
                     }
                     showAvatarSelector = !showAvatarSelector;
@@ -55,30 +55,39 @@ namespace PFCTools.EditorTools {
             EditorGUILayout.EndHorizontal();
 
             if (showAvatarSelector) {
-                foreach(var avatar in knownAvatars) {
-                    EditorGUILayout.BeginHorizontal();
-                    //GUILayout.FlexibleSpace();
-                    if (GUILayout.Button(avatar.name,EditorStyles.miniButton)) {
-                        Target = avatar;
-                        showAvatarSelector = false;
-                        UpdateMaterialCache();
-                        drawMaterialList();
+                if (knownAvatars.Length == 1) {
+                    Target = knownAvatars[0];
+                    UpdateMaterialCache();
+                    drawMaterialList();
+                    showAvatarSelector = false;
+                     
+                }
+                else {
+                    foreach (var avatar in knownAvatars) {
+                        EditorGUILayout.BeginHorizontal();
+                        //GUILayout.FlexibleSpace();
+                        if (GUILayout.Button(avatar.name, EditorStyles.miniButton)) {
+                            Target = avatar;
+                            showAvatarSelector = false;
+                            UpdateMaterialCache();
+                            drawMaterialList();
+                        }
+                        EditorGUILayout.EndHorizontal();
                     }
-                    EditorGUILayout.EndHorizontal();
                 }
                 UIUtils.HorizontalLine();
             }
-            else { 
+            else {
 
 
-            EditorGUI.BeginChangeCheck();
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label("Target:");
-            GUILayout.FlexibleSpace();
-            Target = (GameObject)EditorGUILayout.ObjectField("", Target, typeof(GameObject), true, GUILayout.MinWidth(100));
-            EditorGUILayout.EndHorizontal();
-            if (EditorGUI.EndChangeCheck()) { UpdateMaterialCache(); }
-            UIUtils.HorizontalLine();
+                EditorGUI.BeginChangeCheck();
+                EditorGUILayout.BeginHorizontal();
+                GUILayout.Label("Target:");
+                GUILayout.FlexibleSpace();
+                Target = (GameObject)EditorGUILayout.ObjectField("", Target, typeof(GameObject), true, GUILayout.MinWidth(100));
+                EditorGUILayout.EndHorizontal();
+                if (EditorGUI.EndChangeCheck()) { UpdateMaterialCache(); }
+                UIUtils.HorizontalLine();
             }
             if (Target != null) {
 
@@ -209,5 +218,5 @@ namespace PFCTools.EditorTools {
         }
     }
 
-    
+
 }
