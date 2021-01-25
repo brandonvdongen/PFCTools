@@ -19,13 +19,8 @@ namespace PFCTools.Outfitter {
 
         public override void OnInspectorGUI() {
 
-            if (VRCSDK.installed) { 
             if (GUILayout.Button("Equip item")) {
                 outfit.WearItem();
-            }
-            }
-            else {
-                GUILayout.TextArea("Sorry, this Component requires the VRCSDK to be present in your project.");
             }
         }
     }

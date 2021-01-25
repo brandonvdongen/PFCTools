@@ -13,7 +13,7 @@ namespace PFCTools {
 
         
         static VRCSDK() {
-            if (Directory.GetFiles(Application.dataPath, "VRCAvatarDescriptor.cs", SearchOption.AllDirectories).Length >= 1) {
+            if (Directory.GetFiles(Application.dataPath, "VRCSDKBase.dll", SearchOption.AllDirectories).Length >= 1) {
                 _installed = true;
                 Debug.Log("VRCSDK Found!");
             }
