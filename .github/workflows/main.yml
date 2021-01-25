@@ -45,8 +45,10 @@ jobs:
             package/PFCTools.unitypackage
     - name: Version release file
       run: mv "package/PFCTools.unitypackage" "$EXPORT_NAME"
-    - name: Echo filename
-      run: echo $EXPORT_NAME
+    - name: Echo files
+      run: ls package/
+    - name: Echo build number
+      run: echo $GITHUB_RUN_NUMBER
     - name: Send file to discord channel
       uses: sinshutu/upload-to-discord@master
       env:
