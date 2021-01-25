@@ -38,9 +38,11 @@ jobs:
         title: "Latest Release"
         files: |
             package/PFCTools.unitypackage
+    - name: Version release file
+      run: mv package/PFCTools.unitypackage package/PFCTools-$GITHUB_RUN_NUMBER.unitypackage
     - name: Send file to discord channel
       uses: sinshutu/upload-to-discord@master
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       with:
-        args: package/PFCTools.unitypackage
+        args: package/PFCTools-$GITHUB_RUN_NUMBER.unitypackage
