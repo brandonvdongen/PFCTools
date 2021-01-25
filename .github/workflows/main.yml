@@ -42,4 +42,4 @@ jobs:
         prerelease: false
         title: "Latest Release"
         files: |
-            *.unitypackage
+            package/PFCTools.unitypackage
