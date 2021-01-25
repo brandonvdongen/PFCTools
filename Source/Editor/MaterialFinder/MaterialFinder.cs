@@ -10,13 +10,16 @@ namespace PFCTools.EditorTools {
 
         Vector2 scrollPos;
         string search = "search";
+        bool showAvatarSelector = false;
         bool showSettings = false;
         bool showRenderers = true;
         bool showParticleSystems = false;
         bool showTrailRenderers = false;
         bool showLineRenderers = false;
+
         bool showShader = false;
-        bool showAvatarSelector = false;
+        bool showMaterialPreview = true;
+
         GameObject[] knownAvatars;
 
         Dictionary<Material, MaterialData> materialCache = new Dictionary<Material, MaterialData>();
@@ -60,7 +63,7 @@ namespace PFCTools.EditorTools {
                     UpdateMaterialCache();
                     drawMaterialList();
                     showAvatarSelector = false;
-                     
+
                 }
                 else {
                     foreach (var avatar in knownAvatars) {
@@ -103,6 +106,10 @@ namespace PFCTools.EditorTools {
                 GUILayout.EndHorizontal();
 
                 if (showSettings) {
+                    GUILayout.Label("Settings:");
+                    showShader = GUILayout.Toggle(showShader, "Show shader file");
+                    showMaterialPreview = GUILayout.Toggle(showMaterialPreview, "Show material previews");
+                    UIUtils.HorizontalLine();
                     GUILayout.Label("Sources:");
                     EditorGUI.BeginChangeCheck();
                     showRenderers = GUILayout.Toggle(showRenderers, "Mesh Renderers");
@@ -112,7 +119,6 @@ namespace PFCTools.EditorTools {
                     if (EditorGUI.EndChangeCheck()) {
                         UpdateMaterialCache();
                     }
-                    showShader = GUILayout.Toggle(showShader, "Show shader file");
                     UIUtils.HorizontalLine();
                 }
                 if (materialCache.Count > 1) {
@@ -194,17 +200,28 @@ namespace PFCTools.EditorTools {
 
                 UIUtils.HorizontalLine();
                 EditorGUILayout.BeginHorizontal();
-                GUILayout.Label(material.name + (materialData.count > 1 ? "(" + materialData.count + " Instances)" : ""), GUILayout.MinWidth(50));
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button((materialData.count > 1 ? "Select Sources" : "Select Source"))) {
+                if (!showMaterialPreview) {
+                    if (GUILayout.Button(material.name + (materialData.count > 1 ? " (x" + materialData.count + ")" : ""), EditorStyles.miniButtonLeft)) {
+                        Selection.activeObject = material;
+                    }
+                }
+                else {
+                    GUILayout.Label(material.name + (materialData.count > 1 ? "(" + materialData.count + " Instances)" : ""), GUILayout.MinWidth(50));
+                    GUILayout.FlexibleSpace();
+                }
+
+
+
+                if (GUILayout.Button((materialData.count > 1 ? "Select Sources" : "Select Source"), (!showMaterialPreview ? EditorStyles.miniButtonRight : GUI.skin.button),GUILayout.MaxWidth(100))) {
                     Selection.objects = materialData.renderers.ToArray();
                 }
                 EditorGUILayout.EndHorizontal();
-                EditorGUILayout.BeginHorizontal();
-                if (GUILayout.Button(AssetPreview.GetAssetPreview(material), EditorStyles.miniButton, GUILayout.MaxHeight(100))) {
-                    Selection.activeObject = material;
+
+                if (showMaterialPreview) {
+                    if (GUILayout.Button(AssetPreview.GetAssetPreview(material), EditorStyles.miniButton, GUILayout.MaxHeight(100))) {
+                        Selection.activeObject = material;
+                    }
                 }
-                EditorGUILayout.EndHorizontal();
                 if (showShader) {
                     EditorGUILayout.ObjectField("", material.shader, typeof(Shader), false);
                 }
