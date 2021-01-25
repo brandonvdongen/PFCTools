@@ -21,7 +21,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        ref: 'main'
+        ref: 'master'
     - run: |
         find Source/ -name \*.meta >> metaList
     - run: mkdir package
