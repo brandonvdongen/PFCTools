@@ -30,11 +30,6 @@ jobs:
       with:
         package-path: 'package/PFCTools.unitypackage'
         include-files: metaList
-    - uses: actions/upload-artifact@master
-      with:
-        path: package/PFCTools.unitypackage
-        name: package
-        
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
         repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -43,3 +38,9 @@ jobs:
         title: "Latest Release"
         files: |
             package/PFCTools.unitypackage
+    - name: Send file to discord channel
+      uses: sinshutu/upload-to-discord@master
+      env:
+        DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+      with:
+        args: package/PFCTools.unitypackage
