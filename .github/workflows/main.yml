@@ -18,6 +18,8 @@ on:
 jobs:
   PackgeTools:
     runs-on: ubuntu-latest
+    env:
+      MAJOR_VERSION: 0
     defaults:
       run:
         shell: bash
@@ -42,7 +44,7 @@ jobs:
         files: |
             package/PFCTools.unitypackage
     - name: Version release file
-      run: mv "package/PFCTools.unitypackage" "package/PFCTools-${GITHUB_RUN_NUMBER}.unitypackage"
+      run: mv "package/PFCTools.unitypackage" "package/PFCTools-v${MAJOR_VERSION}.${GITHUB_RUN_NUMBER}.unitypackage"
     - name: Echo files
       run: ls package/
     - name: Send file to discord channel
