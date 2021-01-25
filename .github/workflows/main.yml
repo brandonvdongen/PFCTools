@@ -18,8 +18,6 @@ on:
 jobs:
   PackgeTools:
     runs-on: ubuntu-latest
-    env:
-      EXPORT_NAME: package/PFCTools-${GITHUB_RUN_NUMBER}.unitypackage
     defaults:
       run:
         shell: bash
@@ -44,7 +42,7 @@ jobs:
         files: |
             package/PFCTools.unitypackage
     - name: Version release file
-      run: mv "package/PFCTools.unitypackage" "$EXPORT_NAME"
+      run: mv "package/PFCTools.unitypackage" "package/PFCTools-${GITHUB_RUN_NUMBER}.unitypackage"
     - name: Echo files
       run: ls package/
     - name: Send file to discord channel
@@ -52,4 +50,4 @@ jobs:
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       with:
-        args: $EXPORT_NAME
+        args: package/PFCTools-${GITHUB_RUN_NUMBER}.unitypackage
