@@ -19,7 +19,7 @@ jobs:
   PackgeTools:
     runs-on: ubuntu-latest
     env:
-      EXPORT_NAME: package/PFCTools-$GITHUB_RUN_NUMBER.unitypackage
+      EXPORT_NAME: package/PFCTools-${GITHUB_RUN_NUMBER}.unitypackage
     defaults:
       run:
         shell: bash
@@ -47,8 +47,6 @@ jobs:
       run: mv "package/PFCTools.unitypackage" "$EXPORT_NAME"
     - name: Echo files
       run: ls package/
-    - name: Echo build number
-      run: echo $GITHUB_RUN_NUMBER
     - name: Send file to discord channel
       uses: sinshutu/upload-to-discord@master
       env:
