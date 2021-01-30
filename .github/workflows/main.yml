@@ -28,7 +28,7 @@ jobs:
       with:
         ref: 'master'
     - run: |
-        find Source/PFCTools -name \*.meta >> metaList
+        find Source/ -name \*.meta >> metaList
     - run: mkdir package
 
     - uses: pCYSl5EDgo/create-unitypackage@master
