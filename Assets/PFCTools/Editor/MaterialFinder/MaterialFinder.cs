@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace PFCTools.EditorTools {
+namespace PFCTools.Utils {
 
     [InitializeOnLoad]
     public class MaterialFinder : EditorWindow {
@@ -78,7 +78,7 @@ namespace PFCTools.EditorTools {
                         EditorGUILayout.EndHorizontal();
                     }
                 }
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
             }
             else {
 
@@ -90,7 +90,7 @@ namespace PFCTools.EditorTools {
                 Target = (GameObject)EditorGUILayout.ObjectField("", Target, typeof(GameObject), true, GUILayout.MinWidth(100));
                 EditorGUILayout.EndHorizontal();
                 if (EditorGUI.EndChangeCheck()) { UpdateMaterialCache(); }
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
             }
             if (Target != null) {
 
@@ -109,7 +109,7 @@ namespace PFCTools.EditorTools {
                     GUILayout.Label("Settings:");
                     showShader = GUILayout.Toggle(showShader, "Show shader file");
                     showMaterialPreview = GUILayout.Toggle(showMaterialPreview, "Show material previews");
-                    UIUtils.HorizontalLine();
+                    PFCGUI.HorizontalLine();
                     GUILayout.Label("Sources:");
                     EditorGUI.BeginChangeCheck();
                     showRenderers = GUILayout.Toggle(showRenderers, "Mesh Renderers");
@@ -119,7 +119,7 @@ namespace PFCTools.EditorTools {
                     if (EditorGUI.EndChangeCheck()) {
                         UpdateMaterialCache();
                     }
-                    UIUtils.HorizontalLine();
+                    PFCGUI.HorizontalLine();
                 }
                 if (materialCache.Count > 1) {
                     scrollPos = EditorGUILayout.BeginScrollView(scrollPos);
@@ -198,7 +198,7 @@ namespace PFCTools.EditorTools {
                 if (search != "search" && (!material.name.ToLower().Contains(search.ToLower()))) continue;
                 MaterialData materialData = kvp.Value;
 
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
                 EditorGUILayout.BeginHorizontal();
                 if (!showMaterialPreview) {
                     if (GUILayout.Button(material.name + (materialData.count > 1 ? " (x" + materialData.count + ")" : ""), EditorStyles.miniButtonLeft)) {
