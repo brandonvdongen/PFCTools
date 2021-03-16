@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace PFCTools.EditorTools {
-    public class UIUtils {
+namespace PFCTools.Utils {
+    public class PFCGUI {
 
         public static void HorizontalLine() { 
         Rect rect = EditorGUILayout.GetControlRect(false, 0);

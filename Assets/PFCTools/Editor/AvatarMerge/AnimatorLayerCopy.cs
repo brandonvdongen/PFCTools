@@ -12,7 +12,7 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 #endif
 
 
-namespace PFCTools.EditorTools {
+namespace PFCTools.Utils {
 
     [InitializeOnLoad]
     public class AnimatorLayerCopy : EditorWindow {
@@ -70,7 +70,7 @@ namespace PFCTools.EditorTools {
                 AnimatorControllerSource = (AnimatorController)EditorGUILayout.ObjectField("Source Controller", AnimatorControllerSource, typeof(AnimatorController), false);
                 AnimatorControllerTarget = (AnimatorController)EditorGUILayout.ObjectField("Target Controller", AnimatorControllerTarget, typeof(AnimatorController), false);
 
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
 
                 if (AnimatorControllerSource == null) {
                     EditorGUILayout.LabelField("No Source Animator.");
@@ -164,7 +164,7 @@ namespace PFCTools.EditorTools {
                 ExpressionSource = (VRCExpressionParameters)EditorGUILayout.ObjectField("Source", ExpressionSource, typeof(VRCExpressionParameters), false);
                 ExpressionTarget = (VRCExpressionParameters)EditorGUILayout.ObjectField("Target", ExpressionTarget, typeof(VRCExpressionParameters), false);
 
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
 
                 if (ExpressionSource == null) {
                     EditorGUILayout.LabelField("No Source ExpressionParameters.");
@@ -226,7 +226,7 @@ namespace PFCTools.EditorTools {
                 MenuSource = (VRCExpressionsMenu)EditorGUILayout.ObjectField("Source", MenuSource, typeof(VRCExpressionsMenu), false);
                 MenuTarget = (VRCExpressionsMenu)EditorGUILayout.ObjectField("Target", MenuTarget, typeof(VRCExpressionsMenu), false);
 
-                UIUtils.HorizontalLine();
+                PFCGUI.HorizontalLine();
 
                 if (MenuSource == null) {
                     EditorGUILayout.LabelField("No Source ExpressionMenu.");
