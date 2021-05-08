@@ -12,10 +12,9 @@ namespace PFCTools.AvatarInspector {
         ItemTree<Component> _ComponentTree;
         Dictionary<Type, bool> DisplayableTypes = new Dictionary<Type, bool>();
         public string search = "";
-        private GameObject _target = null;
         private bool showSettings = false;
         private List<Type> OrderedTypes = new List<Type>();
-        private bool groupByParent;
+        private bool groupByParent = true;
         private Vector2 scrollPos;
         private Vector2 typeScrollPos;
 
@@ -24,7 +23,7 @@ namespace PFCTools.AvatarInspector {
 
         private void UpdateCache() {
             DisplayableTypes.Clear();
-            GroupingBools.Clear();
+            //GroupingBools.Clear();
         }
 
         private void onChanged() {
@@ -119,9 +118,12 @@ namespace PFCTools.AvatarInspector {
                         GUILayout.EndHorizontal();
                     }
                 }
+                if (Editors[component] == null) continue;
                 if (GroupingBools[component.transform.name] || !groupByParent) {
+                    
                     GUILayout.Space(-2);
                     if (!groupByParent) EditorGUILayout.BeginHorizontal();
+                    
                     Editors[component].shown = EditorGUILayout.InspectorTitlebar(Editors[component].shown, component);
                     if (!groupByParent) {
                         if (GUILayout.Button(PrefabUtility.GetIconForGameObject(component.gameObject), GUILayout.MaxWidth(25), GUILayout.MaxHeight(25))) {

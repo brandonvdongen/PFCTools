@@ -14,6 +14,7 @@ namespace PFCTools.AvatarInspector {
         public static CacheUpdateEvent onCacheUpdate;
 
         public readonly ItemTree<Component> ComponentTree = new ItemTree<Component>();
+        public readonly Dictionary<Material, MaterialData> materialCache = new Dictionary<Material, MaterialData>();
         bool showAvatarSelector = false;
         bool autoRefresh = true;
         int toolbarSelection = 0;
@@ -35,7 +36,7 @@ namespace PFCTools.AvatarInspector {
 
         private void OnEnable() {
             avatarInspector = new AvatarInspectorInternal(ComponentTree);
-            materialFinder = new MaterialFinderInternal();
+            materialFinder = new MaterialFinderInternal(materialCache);
             ComponentTree.onAddNode += onAddNode;
             ComponentTree.onRemoveNode += onRemoveNode;
         }
@@ -63,7 +64,7 @@ namespace PFCTools.AvatarInspector {
             GUILayout.BeginHorizontal(EditorStyles.toolbar);
             autoRefresh = GUILayout.Toggle(autoRefresh, "Auto-Refresh", EditorStyles.toolbarButton);
             if (!autoRefresh && GUILayout.Button("Refresh", EditorStyles.toolbarButton)) {
-                ComponentTree.Clear();
+                UpdateCache();
             }
             GUILayout.FlexibleSpace();
 
@@ -118,11 +119,42 @@ namespace PFCTools.AvatarInspector {
         private void UpdateCache() {
 
             ComponentTree.Clear();
+            materialCache.Clear();
             if (Target == null) return;
-            ComponentTree.AddNodes(Target.GetComponentsInChildren<Component>());
+            ComponentTree.AddNodes(Target.GetComponentsInChildren<Component>(true));
+        }
+
+        private void cacheMaterials(Material[] materials, GameObject source, Type type) {
+            foreach (Material material in materials) {
+                if (material == null) continue;
+                if (!materialCache.ContainsKey(material)) {
+                    MaterialData materialData = new MaterialData();
+                    materialData.material = material;
+                    materialData.count = 1;
+                    materialData.renderers = new List<GameObject>();
+                    materialData.renderers.Add(source);
+                    materialData.types = new List<Type>();
+                    materialData.types.Add(type);
+                    //materialData.renderers.Add(renderer as Renderer);
+                    materialCache.Add(material, materialData);
+                }
+                else {
+                    MaterialData materialData = materialCache[material];
+                    materialData.count = materialData.count + 1;
+                    materialData.renderers.Add(source);
+                    if (!materialData.types.Contains(type)) {
+                        materialData.types.Add(type);
+                    }
+                    materialCache[material] = materialData;
+                }
+
+            }
         }
 
         private ItemTreeNode<Component> onAddNode(ItemTreeNode<Component> Node) {
+            if(Node.Value is Renderer) {
+                cacheMaterials((Node.Value as Renderer).sharedMaterials, Node.Value.gameObject, Node.Value.GetType());
+            }
             Transform Parent = Node.Value.transform.parent;
             if (Parent != null) {
                 if (ComponentTree.Contains(Parent)) {
@@ -153,6 +185,13 @@ namespace PFCTools.AvatarInspector {
                 Repaint();
             }
         }
+    }
+
+    public struct MaterialData {
+        public Material material;
+        public int count;
+        public List<Type> types;
+        public List<GameObject> renderers;
     }
 
     class ComponentEditorData {
