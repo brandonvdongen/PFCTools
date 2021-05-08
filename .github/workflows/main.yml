@@ -54,7 +54,7 @@ jobs:
       with:
         args: package/*
     - name: Discord notification
-      uses: brandonvdongen/github-to-discord
+      uses: brandonvdongen/github-to-discord@main
       env:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         MESSAGE_TITLE: New Version
