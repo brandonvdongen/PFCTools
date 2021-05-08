@@ -1,7 +1,7 @@
 name: "CD: Crosspost Changelog"
 on:
   release:
-    types: [published]
+    types: [released]
 jobs:
   crosspost:
     runs-on: ubuntu-latest
