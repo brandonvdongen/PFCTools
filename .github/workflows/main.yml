@@ -53,3 +53,15 @@ jobs:
         DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
       with:
         args: package/*
+    - name: "Parse release name"
+      id: get-release-name
+      run: "echo ::set-output name=name::${RELEASE:-$TAG}"
+      env:
+        RELEASE: ${{ github.event.release.name }}
+        TAG: ${{ github.event.release.tag_name }}
+    - name: "Crosspost changelog to Discord"
+      uses: kludge-cs/gitcord-release-changelogger@v3.0.0
+      with:
+        release-body: ${{ github.event.release.body }}
+        release-name: ${{ steps.get-release-name.outputs.name }}
+        webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
