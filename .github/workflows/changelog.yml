@@ -1,7 +1,7 @@
-name: "CD: Crosspost Changelog"
+name: "Post Changelog to discord"
 on:
   release:
-    types: [released]
+    types: [edited]
 jobs:
   crosspost:
     runs-on: ubuntu-latest
