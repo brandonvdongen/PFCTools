@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -156,8 +157,8 @@ namespace PFCTools.Utils {
             EditorGUILayout.EndFadeGroup();
 
 #if VRC_SDK_VRCSDK3
-            
-                ShowExpressionMergeTools.target = GUILayout.Toggle(ShowExpressionMergeTools.target, "Parameter transfer tools", EditorStyles.toolbarButton);
+
+            ShowExpressionMergeTools.target = GUILayout.Toggle(ShowExpressionMergeTools.target, "Parameter transfer tools", EditorStyles.toolbarButton);
 
             if (ShowExpressionMergeTools.faded > 0) {
                 EditorGUILayout.BeginFadeGroup(ShowExpressionMergeTools.faded);
@@ -174,45 +175,38 @@ namespace PFCTools.Utils {
                     EditorGUILayout.LabelField("No Target ExpressionParameters.");
                 }
                 if (ExpressionSource != null && ExpressionTarget != null) {
-                    int slots = 16;
-                    int lastEmpty = -1;
-                    int index = 0;
+
                     GUILayout.Label("Target parameters:");
                     foreach (VRCExpressionParameters.Parameter parameter in ExpressionTarget.parameters) {
-                        if (String.IsNullOrWhiteSpace(parameter.name)) {
-                            slots--;
-                            lastEmpty = index;
+                        EditorGUILayout.BeginHorizontal();
+                        if (ExpressionSource.FindParameter(parameter.name) != null) {
+                            if (GUILayout.Button("Remove", GUILayout.Width(80))) {
+                                List<VRCExpressionParameters.Parameter> tempList = ExpressionTarget.parameters.ToList();
+                                tempList.Remove(parameter);
+                                ExpressionTarget.parameters = tempList.ToArray();
+                            }
                         }
                         else {
-                            EditorGUILayout.BeginHorizontal();
-                            if (ExpressionSource.FindParameter(parameter.name) != null) {
-                                if (GUILayout.Button("Remove", GUILayout.Width(80))) {
-                                    VRCExpressionParameters.Parameter newParam = new VRCExpressionParameters.Parameter();
-                                    ExpressionTarget.parameters[index] = newParam;
-                                }
-                            }
-                            else {
-                                GUILayout.Button("-", GUILayout.Width(80));
+                            GUILayout.Button("-", GUILayout.Width(80));
+                        }
+                        GUILayout.Label(parameter.name);
+                        EditorGUILayout.EndHorizontal();
+                    }
+                    foreach (VRCExpressionParameters.Parameter parameter in ExpressionSource.parameters) {
+                        if (ExpressionTarget.FindParameter(parameter.name) == null) {
+                            GUILayout.BeginHorizontal();
+                            if (GUILayout.Button("Add", GUILayout.Width(80))) {
+                                //ExpressionTarget.parameters[lastEmpty] = parameter;
+                                List<VRCExpressionParameters.Parameter> tempList = ExpressionTarget.parameters.ToList();
+                                tempList.Add(parameter);
+                                ExpressionTarget.parameters = tempList.ToArray();
                             }
                             GUILayout.Label(parameter.name);
-                            EditorGUILayout.EndHorizontal();
-                        }
-                        index++;
-                    }
-                    if (slots < 16) {
-                        foreach (VRCExpressionParameters.Parameter parameter in ExpressionSource.parameters) {
-                            if (ExpressionTarget.FindParameter(parameter.name) == null) {
-                                GUILayout.BeginHorizontal();
-                                if (GUILayout.Button("Add", GUILayout.Width(80))) {
-                                    ExpressionTarget.parameters[lastEmpty] = parameter;
-                                }
-                                GUILayout.Label(parameter.name);
-                                GUILayout.EndHorizontal();
+                            GUILayout.EndHorizontal();
 
-                            }
                         }
                     }
-                    GUILayout.Label("Target Expressions Used (" + slots + "/16)");
+                    GUILayout.Label("Target Expressions Used (" + ExpressionTarget.CalcTotalCost() + "/" + VRCExpressionParameters.MAX_PARAMETER_COST + ")");
 
                 }
                 EditorGUILayout.EndFadeGroup();
