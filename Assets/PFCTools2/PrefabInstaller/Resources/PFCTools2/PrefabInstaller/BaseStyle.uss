@@ -1,0 +1,31 @@
+﻿.AvatarListContainer ListView{
+	margin-top:5px;
+	height:100px;
+	background-color:rgba(255,255,255,.1);
+}
+
+.ErrorList{
+	margin-top:5px;
+	background-color:rgba(0,0,0,.1);
+	border-radius:5px;
+}
+.ErrorList .notification{
+	margin:5px;
+	border-radius:5px;
+	background-color:rgba(0,0,0,.3);
+}
+.ErrorList .notification .title{
+	border-top-right-radius:5px;
+	border-top-left-radius:5px;
+	color:black;
+	background-color:rgba(255,255,255,.8);
+} 
+.ErrorList .notification .description{
+	padding:3px;
+}
+.ErrorList .error .title{
+	background-color:rgba(255,80,80,1);
+}
+.ErrorList .warning .title{
+	background-color:rgba(235, 198, 52,1);
+}
