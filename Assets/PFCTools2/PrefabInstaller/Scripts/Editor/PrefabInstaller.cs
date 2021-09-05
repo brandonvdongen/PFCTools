@@ -1,39 +1,53 @@
 using System;
+using System.IO;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEditor.UIElements;
-using PFCTools.Utils;
+using PFCTools2.Utils;
 using VRC.SDK3.Avatars.Components;
+using VRC.SDK3.Avatars.ScriptableObjects;
+using VRC.SDK3.Editor;
 using UnityEngine.Animations;
+using UnityEditor.Animations;
+using PFCTools2.Installer.Pseudo;
 
 namespace PFCTools2.Installer.Core {
 
     [CustomEditor(typeof(PrefabTemplate), true)]
     public class PrefabInstaller : Editor {
 
-        VRCAvatarDescriptor _selectedAvatar;
-        VRCAvatarDescriptor ActiveDescriptor { get { return _selectedAvatar; } set { _selectedAvatar = value; ValidateAvatar(); } }
-        bool avatarSelector;
-        VisualElement avatarListContainer;
-        VisualElement ErrorList;
-        Button InstallBtn;
-        PrefabTemplate template;
+        //Operating params
+        bool loaded = false;
+        bool isValid = false;
+        AvatarDefinition currentAvatar;
+        InstallerMode mode = InstallerMode.Intall;
 
-        List<validatorResponse> validatorLog = new List<validatorResponse>();
+        //UI Elements
+        VisualElement avatarListContainer;
+        VisualElement configWindow;
+        VisualElement customizerWindow;
+        VisualElement debugWindow;
+        Button InstallBtn;
+        VisualElement ErrorList;
+        PrefabTemplate template;
+        List<ValidatorResponse> validatorLog = new List<ValidatorResponse>();
 
         private void OnEnable() {
             template = target as PrefabTemplate;
-            template.onConfigChange += onPrefabConfigChange;
+            template.onConfigChange += onConfigChange;
         }
 
         private void OnDisable() {
-            template.onConfigChange -= onPrefabConfigChange;
+            template.onConfigChange -= onConfigChange;
         }
 
-        public void onPrefabConfigChange() {
-            ValidateAvatar();
+        public void onConfigChange() {
+            if (loaded) {
+                ValidateAvatar();
+                UpdateUI();
+            }
         }
 
         public override VisualElement CreateInspectorGUI() {
@@ -43,71 +57,130 @@ namespace PFCTools2.Installer.Core {
             StyleSheet styleSheet = Resources.Load<StyleSheet>("PFCTools2/PrefabInstaller/BaseStyle");
             root.styleSheets.Add(styleSheet);
 
-
+            //Build AvatarList Container
             avatarListContainer = new VisualElement();
             avatarListContainer.AddToClassList("AvatarListContainer");
             ListView emptyAvatarList = new ListView() { itemHeight = 16 };
             avatarListContainer.Add(emptyAvatarList);
 
+            //Build Refresh Button
             Button refreshBtn = new Button() { text = "Select Avatar to Install prefab On" };
             void refresh() {
                 VRCAvatarDescriptor[] descriptors = FindObjectsOfType<VRCAvatarDescriptor>();
-                Array.Reverse(descriptors);
+                //Array.Reverse(descriptors);
                 Func<VisualElement> makeItem = () => new Label();
                 Action<VisualElement, int> bindItem = (e, i) => (e as Label).text = descriptors[i].gameObject.name;
                 ListView avatarList = new ListView(descriptors, 16, makeItem, bindItem);
-                avatarList.onSelectionChanged += obj => { ActiveDescriptor = (obj[0] as VRCAvatarDescriptor); };
+                avatarList.onSelectionChanged += obj => { currentAvatar = new AvatarDefinition((obj[0] as VRCAvatarDescriptor)); onConfigChange(); };
                 avatarListContainer.Clear();
                 avatarListContainer.Add(avatarList);
             };
             refreshBtn.clicked += refresh;
             refresh();
+            
+            //Fetch ConfigUI
+            configWindow = template.PrefabConfigUI();
+            //Fetch CustomizerUI
+            customizerWindow = template.CustomizerUI();
 
-            VisualElement config = template.PrefabConfigUI();
-
+            //Create Instal Button
             InstallBtn = new Button() { text = "Install Prefab" };
             InstallBtn.SetEnabled(false);
-            InstallBtn.clicked += BuildPrefab;
+            InstallBtn.clicked += ProcessPrefab;
 
+            //Create Error List
             ErrorList = new ScrollView();
             ErrorList.AddToClassList("ErrorList");
 
+            //Create Debug
+            debugWindow = new VisualElement();
+            Button createPseudoBtn = new Button() { text = "New Text Asset" };
+            createPseudoBtn.clicked += CreateNewAssetFile;
+            ObjectField pseudoField = new ObjectField() { objectType = typeof(TextAsset)};
+            Button testPseudoBtn = new Button() { text = "Test Pseudo Code" };
+            testPseudoBtn.clicked += () => { PseudoReader.processFile(pseudoField.value as TextAsset); };
+
+            debugWindow.Add(createPseudoBtn);
+            debugWindow.Add(pseudoField);
+            debugWindow.Add(testPseudoBtn);
+
+            //Build UI
             root.Add(refreshBtn);
             root.Add(avatarListContainer);
-            if (config != null) {
-                root.Add(config);
-                config.Bind(new SerializedObject(target));
+            SerializedObject SO = new SerializedObject(target);
+            if (configWindow != null) {
+                root.Add(configWindow);
+                configWindow.AddToClassList("configWindow"); 
+                configWindow.Bind(SO);
+            }
+            if(customizerWindow != null) {
+                root.Add(customizerWindow);
+                customizerWindow.AddToClassList("customizerWindow");
+                customizerWindow.Bind(SO);
             }
             root.Add(InstallBtn);
             root.Add(ErrorList);
-            ValidateAvatar();
+            root.Add(debugWindow);
+            loaded = true;
+            onConfigChange();
             return root;
         }
 
+        private void CreateNewAssetFile() {
+            string path = AssetDatabase.GetAssetPath(template);
+            string directory = Path.GetDirectoryName(path);
+            File.WriteAllText(directory + "/New text asset.txt","");
+            AssetDatabase.Refresh();
+        }
+
+        private void UpdateUI() {
+            if (InstallBtn == null) return;
+            if (mode == InstallerMode.Intall) {
+                InstallBtn.text = "Install Prefab";
+                configWindow.style.display = DisplayStyle.Flex;
+                customizerWindow.style.display = DisplayStyle.None;
+                InstallBtn.SetEnabled(isValid);
+            }
+            if (mode == InstallerMode.Modify) {
+                InstallBtn.text = "Remove Prefab";
+                configWindow.style.display = DisplayStyle.None;
+                customizerWindow.style.display = DisplayStyle.Flex;
+                InstallBtn.SetEnabled(true);
+            }
+            if (template.debug) debugWindow.style.display = DisplayStyle.Flex;
+            else debugWindow.style.display = DisplayStyle.None;
+        }
 
         private bool ValidateAvatar() {
-            List<validatorResponse> log = new List<validatorResponse>();
-
+            List<ValidatorResponse> log = new List<ValidatorResponse>();
             if (ErrorList != null) ErrorList.Clear();
-            if (ActiveDescriptor != null) {
-                Animator animator = ActiveDescriptor.GetComponent<Animator>();
-                if (animator == null) { log.Add(new validatorResponse("No animator found", "The selected object seems to not have an animator attached to it, make sure your avatar has a animator!", true)); }
-                if (animator == null || (animator != null && !animator.isHuman)) { log.Add(new validatorResponse("Avatar is not human", "It appears the selected avatar is not humanoid, the dice prefab can currently not be installed on non-humanoid avatars yet, sorry for the inconveninece", true)); }
-                if (ActiveDescriptor.expressionParameters == null) { log.Add(new validatorResponse("No expression parameters found", "This avatar seems to not have a expression parameter asset assigned in the descriptor.", true)); }
-                if (ActiveDescriptor.expressionsMenu == null) { log.Add(new validatorResponse("No expression menu found", "This avatar seems to not have a expression menu asset assigned in the descriptor.", true)); }
+            if (currentAvatar != null) {
+                if (!currentAvatar.HasAnimator) { log.Add(new ValidatorResponse("No animator found", "The selected object seems to not have an animator attached to it, make sure your avatar has a animator!", ValidatorResponseType.error)); }
+                if (!currentAvatar.HasParameters) { log.Add(new ValidatorResponse("No expression parameters found", "This avatar seems to not have a expression parameter asset assigned in the descriptor. The installer will create a new parameter asset to use if you decide to continue.", ValidatorResponseType.warning)); }
+                if (!currentAvatar.HasMenu) { log.Add(new ValidatorResponse("No expression menu found", "This avatar seems to not have a expression menu asset assigned in the descriptor. The installer will create a new menu asset to use if you decide to continue.", ValidatorResponseType.warning)); }
+            }
+            else {
+                return false;
             }
 
-            template.ValidateConfig(log);
+            if (template.IsInstalledOn(currentAvatar)) {
+                mode = InstallerMode.Modify;
+                log.Add(new ValidatorResponse("Existing Install Found", "An existing installation of this prefab has been found on the selected avatar.", ValidatorResponseType.notice));
+            }
+            else {
+                mode = InstallerMode.Intall;
+            }
 
-            bool isValid = true;
-            foreach (validatorResponse response in log) {
+            template.Validate(log, mode);
+
+            isValid = true;
+            foreach (ValidatorResponse response in log) {
                 VisualElement notif = createNotification(response.name, response.desc);
-                notif.AddToClassList(response.preventInstall ? "error" : "warning");
+
+                if (response.responseType == ValidatorResponseType.error) { notif.AddToClassList("error"); isValid = false; }
+                if (response.responseType == ValidatorResponseType.warning) notif.AddToClassList("warning");
                 if (ErrorList != null) ErrorList.Add(notif);
-                if (response.preventInstall) isValid = false;
             }
-            if (ActiveDescriptor == null) isValid = false;
-            if (InstallBtn != null) InstallBtn.SetEnabled(isValid);
             return isValid;
 
         }
@@ -126,47 +199,64 @@ namespace PFCTools2.Installer.Core {
             return note;
         }
 
-        private void BuildPrefab() {
-            Animator animator = ActiveDescriptor.GetComponent<Animator>();
-            List<string> metaTags = template.getConstraintMetaTags();
-            GameObject Prefab = PrefabUtility.InstantiatePrefab(template.Prefab) as GameObject;
-            Prefab.transform.parent = ActiveDescriptor.transform;
+        private void ProcessPrefab() {
+            if (mode == InstallerMode.Intall) {
+                List<string> metaTags = template.getConstraintMetaTags();
+                GameObject Prefab = PrefabUtility.InstantiatePrefab(template.Prefab) as GameObject;
+                Prefab.transform.parent = currentAvatar.transform;
 
-            List<ConstraintAssigner> assigners = new List<ConstraintAssigner>(Prefab.GetComponentsInChildren<ConstraintAssigner>());
-            foreach (ConstraintAssigner assigner in assigners) {
-                foreach (HumanBoneEntry hbe in assigner.Sources) {
-                    IConstraint constraint = assigner.TargetConstraint as IConstraint;
-                    Transform bone = animator.GetBoneTransform(hbe.targetBone);
-                    if (assigner.Mode == ConstraintAssignerMode.All) {
-                        constraint.AddSource(new ConstraintSource() { sourceTransform = bone, weight = hbe.weight });
-                    }
-                    else if(assigner.Mode == ConstraintAssignerMode.Meta) {
-                        List<string> entryTags = new List<string>(hbe.Meta.Split(char.Parse(",")));
-                        bool tagFound = false;
-                        foreach(string tag in entryTags) {
-                            if (metaTags.Contains(tag)) {
-                                tagFound = true;
-                            }
-                        }
-                        if (tagFound) {
+                List<ConstraintAssigner> assigners = new List<ConstraintAssigner>(Prefab.GetComponentsInChildren<ConstraintAssigner>());
+                foreach (ConstraintAssigner assigner in assigners) {
+                    foreach (HumanBoneEntry hbe in assigner.Sources) {
+                        IConstraint constraint = assigner.TargetConstraint as IConstraint;
+                        Transform bone = currentAvatar.Animator.GetBoneTransform(hbe.targetBone);
+                        if (assigner.Mode == ConstraintAssignerMode.All) {
                             constraint.AddSource(new ConstraintSource() { sourceTransform = bone, weight = hbe.weight });
                         }
+                        else if (assigner.Mode == ConstraintAssignerMode.Meta) {
+                            List<string> entryTags = new List<string>(hbe.Meta.Split(char.Parse(",")));
+                            bool tagFound = false;
+                            foreach (string tag in entryTags) {
+                                if (metaTags.Contains(tag)) {
+                                    tagFound = true;
+                                }
+                            }
+                            if (tagFound) {
+                                constraint.AddSource(new ConstraintSource() { sourceTransform = bone, weight = hbe.weight });
+                            }
+                        }
                     }
+                    DestroyImmediate(assigner);
                 }
-                DestroyImmediate(assigner);
             }
+            else if(mode == InstallerMode.Modify) {
+                GameObject prefab = template.GetInstalledPrefab(currentAvatar);
+                template.BeforePrefabRemove();
+                DestroyImmediate(prefab);
+                template.AfterPrefabRemove();
+            }
+            onConfigChange();
         }
 
     }
-    public struct validatorResponse {
+    public struct ValidatorResponse {
         public string name;
         public string desc;
-        public bool preventInstall;
-        public validatorResponse(string name, string desc, bool preventInstall) {
+        public ValidatorResponseType responseType;
+        public ValidatorResponse(string name, string desc, ValidatorResponseType responseType) {
             this.name = name;
             this.desc = desc;
-            this.preventInstall = preventInstall;
+            this.responseType = responseType;
         }
 
+    }
+    public enum ValidatorResponseType {
+        error,
+        warning,
+        notice
+    }
+    public enum InstallerMode {
+        Intall,
+        Modify
     }
 }

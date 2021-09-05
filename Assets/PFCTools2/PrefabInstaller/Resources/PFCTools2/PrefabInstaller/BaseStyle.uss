@@ -29,3 +29,11 @@
 .ErrorList .warning .title{
 	background-color:rgba(235, 198, 52,1);
 }
+.configWindow {
+	margin-top:5px;
+	margin-bottom:5px;
+}
+.customizerWindow {
+	margin-top:5px;
+	margin-bottom:5px;
+}
