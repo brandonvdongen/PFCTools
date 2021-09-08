@@ -11,7 +11,7 @@ using VRC.SDK3.Avatars.ScriptableObjects;
 using VRC.SDK3.Editor;
 using UnityEngine.Animations;
 using UnityEditor.Animations;
-using PFCTools2.Installer.Pseudo;
+using PFCTools2.Installer.PseudoParser;
 
 namespace PFCTools2.Installer.Core {
 
@@ -95,10 +95,10 @@ namespace PFCTools2.Installer.Core {
             //Create Debug
             debugWindow = new VisualElement();
             Button createPseudoBtn = new Button() { text = "New Text Asset" };
-            createPseudoBtn.clicked += CreateNewAssetFile;
+            createPseudoBtn.clicked += () => { FileHelper.CreateNewTextFile(template, "newFile.txt", ""); };
             ObjectField pseudoField = new ObjectField() { objectType = typeof(TextAsset)};
             Button testPseudoBtn = new Button() { text = "Test Pseudo Code" };
-            testPseudoBtn.clicked += () => { PseudoReader.processFile(pseudoField.value as TextAsset); };
+            testPseudoBtn.clicked += () => { Pseudo.Parse(pseudoField.value as TextAsset); };
 
             debugWindow.Add(createPseudoBtn);
             debugWindow.Add(pseudoField);
@@ -124,13 +124,6 @@ namespace PFCTools2.Installer.Core {
             loaded = true;
             onConfigChange();
             return root;
-        }
-
-        private void CreateNewAssetFile() {
-            string path = AssetDatabase.GetAssetPath(template);
-            string directory = Path.GetDirectoryName(path);
-            File.WriteAllText(directory + "/New text asset.txt","");
-            AssetDatabase.Refresh();
         }
 
         private void UpdateUI() {
