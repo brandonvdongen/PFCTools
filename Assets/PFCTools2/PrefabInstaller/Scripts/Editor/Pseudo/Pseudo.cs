@@ -17,7 +17,7 @@ namespace PFCTools2.Installer.PseudoParser {
         }
 
 
-        public static List<PseudoAction> EnabledActions = new List<PseudoAction>{ new PseudoLayer(), new PseudoEntry(), new PseudoTransition() };
+        public static List<PseudoAction> EnabledActions = new List<PseudoAction>{ new PseudoLayer(), new PseudoEntry(), new PseudoTransition(), new PseudoState() };
 
         public static void Parse(TextAsset asset, AnimatorController controller = null) {
             string path = AssetDatabase.GetAssetPath(asset);
