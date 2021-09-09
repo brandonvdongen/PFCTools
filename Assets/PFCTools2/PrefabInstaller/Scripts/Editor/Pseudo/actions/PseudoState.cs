@@ -19,14 +19,23 @@ namespace PFCTools2.Installer.PseudoParser {
                 while (!Tokens.EOF() && Tokens.Peek().HasType(TokenType.String)) {
                     Token modifier = Tokens.Next(TokenType.String);
                     if (modifier.value.ToLower() == "motion") {
-                        //do motion things
+                        string clippath = Tokens.Next(TokenType.String).value;
+                        AnimationClip clip = Resources.Load<AnimationClip>(clippath);
+                        Debug.Log(clippath);
+                        Debug.Log(clip);
+                        state.motion = clip;
                     }
                     else if (modifier.value.ToLower() == "speed") {
                         state.speed = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
                     }
+
                     else if (modifier.value.ToLower() == "multiplier") {
                         state.speedParameter = Context.GetParameter(Tokens.Next(TokenType.String).value, AnimatorControllerParameterType.Bool).name; ;
                         state.speedParameterActive = true;
+                    }
+                    else if (modifier.value.ToLower() == "motiontime") {
+                        state.timeParameter = Context.GetParameter(Tokens.Next(TokenType.String).value, AnimatorControllerParameterType.Bool).name; ;
+                        state.timeParameterActive = true;
                     }
                     else if (modifier.value.ToLower() == "mirror") {
                         if (Tokens.Peek().HasType(TokenType.String)) {
@@ -51,7 +60,7 @@ namespace PFCTools2.Installer.PseudoParser {
                         bool on = Tokens.Next(TokenType.Bool).value == "true" ? true : false;
                         state.writeDefaultValues = on;
                     }
-                    else if( modifier.value.ToLower() == "footik") {
+                    else if (modifier.value.ToLower() == "footik") {
                         bool on = Tokens.Next(TokenType.Bool).value == "true" ? true : false;
                         state.iKOnFeet = on;
                     }

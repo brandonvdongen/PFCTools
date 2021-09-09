@@ -53,11 +53,14 @@ namespace PFCTools2.Installer.PseudoParser {
                                 break;
                         };
                     }
-
+                    string output = part;
+                    if(part.StartsWith("\"") && part.EndsWith("\"")) {
+                        output = part.Substring(1, part.Length - 2);
+                    }
                     posIndex++;
                     previousLexType = type;
 
-                    tokenList.Add(new Token(part, type, lineIndex,posIndex));
+                    tokenList.Add(new Token(output, type, lineIndex,posIndex));
                 }
             }
             return tokenList;
