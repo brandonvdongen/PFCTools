@@ -38,7 +38,7 @@ namespace PFCTools2.Installer.PseudoParser {
             return token;
         }
         public Token Peek() {
-            if (EOF()) throw new Exception("Something Exploded and things went horribly wrong, you're not supposed to this error, it originated at Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+            if (EOF()) Exception();
             return _input[index];
         }        
         public bool EOF() {

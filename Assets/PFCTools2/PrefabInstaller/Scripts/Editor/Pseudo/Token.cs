@@ -1,6 +1,4 @@
-﻿using System.Collections;
-
-namespace PFCTools2.Installer.PseudoParser {
+﻿namespace PFCTools2.Installer.PseudoParser {
 
     public class Token {
         public string value;
@@ -25,10 +23,10 @@ namespace PFCTools2.Installer.PseudoParser {
         Action = 1 << 1,
         Comp = 1 << 2,
         Operator = 1 << 3,
-        String = 1 << 4,
-        Float = 1 << 5,
-        Int = 1 << 6,
-        Bool = 1 << 7,
+        String = 1 << 6,
+        Float = 1 << 7,
+        Int = 1 << 8,
+        Bool = 1 << 9,
     }
 
 }

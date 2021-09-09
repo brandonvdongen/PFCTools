@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.Animations;
 using System;
 
 namespace PFCTools2.Installer.PseudoParser {
@@ -16,24 +17,29 @@ namespace PFCTools2.Installer.PseudoParser {
         }
 
 
-        public static List<PseudoAction> PseudoActions = new List<PseudoAction>{ new PseudoLayer(), new PseudoEntry(), new PseudoTransition() };
+        public static List<PseudoAction> EnabledActions = new List<PseudoAction>{ new PseudoLayer(), new PseudoEntry(), new PseudoTransition() };
 
-        public static void Parse(TextAsset asset) {
+        public static void Parse(TextAsset asset, AnimatorController controller = null) {
             string path = AssetDatabase.GetAssetPath(asset);
-            Parse(Lexxer(asset),path);
+            Parse(Lexxer(asset),path, controller);
         }
-        public static void Parse(List<Token> tokenList, string path) {
+        public static void Parse(List<Token> tokenList, string path, AnimatorController controller = null) {
             TokenStream Tokens = new TokenStream(tokenList);
-            ControllerContext context = new ControllerContext(path);
+            ControllerContext context;
+            if (controller) {
+                 context = new ControllerContext(controller);
+            }
+            else {
+                context = new ControllerContext(path);
+            }
             while (!Tokens.EOF()) {
-                Debug.Log("Processing Pseudo Code: Progress :" + Tokens.progress);
                 Token token = Tokens.Next();
                 if((token.type & TokenType.Action) == TokenType.Mismatch) {
                     Tokens.Exception();
                 }
 
                 bool foundAction = false;
-                foreach (PseudoAction action in PseudoActions) {                    
+                foreach (PseudoAction action in EnabledActions) {                    
                     if(token.value == action.ActionKey) {
                        context = action.Process(context, Tokens);
                        foundAction = true;
@@ -44,12 +50,5 @@ namespace PFCTools2.Installer.PseudoParser {
             }
             
         }
-    }
-
-
-    
-
-    public class ProgramTree {
-        Queue<PseudoAction> actions = new Queue<PseudoAction>();
     }
 }

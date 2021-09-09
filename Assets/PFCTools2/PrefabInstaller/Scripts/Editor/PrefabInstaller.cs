@@ -77,7 +77,7 @@ namespace PFCTools2.Installer.Core {
             };
             refreshBtn.clicked += refresh;
             refresh();
-            
+
             //Fetch ConfigUI
             configWindow = template.PrefabConfigUI();
             //Fetch CustomizerUI
@@ -96,12 +96,21 @@ namespace PFCTools2.Installer.Core {
             debugWindow = new VisualElement();
             Button createPseudoBtn = new Button() { text = "New Text Asset" };
             createPseudoBtn.clicked += () => { FileHelper.CreateNewTextFile(template, "newFile.txt", ""); };
-            ObjectField pseudoField = new ObjectField() { objectType = typeof(TextAsset)};
+            ObjectField pseudoField = new ObjectField() { objectType = typeof(TextAsset) };
+            ObjectField controllerField = new ObjectField() { objectType = typeof(AnimatorController) };
             Button testPseudoBtn = new Button() { text = "Test Pseudo Code" };
-            testPseudoBtn.clicked += () => { Pseudo.Parse(pseudoField.value as TextAsset); };
+            testPseudoBtn.clicked += () => {
+                if (controllerField.value == null) {
+                    Pseudo.Parse(pseudoField.value as TextAsset);
+                }
+                else {
+                    Pseudo.Parse(pseudoField.value as TextAsset, controllerField.value as AnimatorController);
+                }
+            };
 
             debugWindow.Add(createPseudoBtn);
             debugWindow.Add(pseudoField);
+            debugWindow.Add(controllerField);
             debugWindow.Add(testPseudoBtn);
 
             //Build UI
@@ -110,10 +119,10 @@ namespace PFCTools2.Installer.Core {
             SerializedObject SO = new SerializedObject(target);
             if (configWindow != null) {
                 root.Add(configWindow);
-                configWindow.AddToClassList("configWindow"); 
+                configWindow.AddToClassList("configWindow");
                 configWindow.Bind(SO);
             }
-            if(customizerWindow != null) {
+            if (customizerWindow != null) {
                 root.Add(customizerWindow);
                 customizerWindow.AddToClassList("customizerWindow");
                 customizerWindow.Bind(SO);
@@ -222,7 +231,7 @@ namespace PFCTools2.Installer.Core {
                     DestroyImmediate(assigner);
                 }
             }
-            else if(mode == InstallerMode.Modify) {
+            else if (mode == InstallerMode.Modify) {
                 GameObject prefab = template.GetInstalledPrefab(currentAvatar);
                 template.BeforePrefabRemove();
                 DestroyImmediate(prefab);

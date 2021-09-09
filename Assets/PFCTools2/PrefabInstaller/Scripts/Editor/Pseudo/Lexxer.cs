@@ -6,6 +6,13 @@ using UnityEngine;
 namespace PFCTools2.Installer.PseudoParser {
     public partial class Pseudo {
         public static List<Token> Lexxer(TextAsset file) {
+
+            List<string> actionKeys = new List<string>();
+            foreach(PseudoAction action in EnabledActions) {
+                actionKeys.Add(action.ActionKey);
+            }
+
+
             string[] lines = file.text.Split(char.Parse("\n"));
             List<Token> tokenList = new List<Token>();
             int lineIndex = 0;
@@ -15,14 +22,16 @@ namespace PFCTools2.Installer.PseudoParser {
                 string[] parts = Regex.Split(line, "(?<=^[^\"]*(?:\"[^\"]*\"[^\"]*)*) (?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
                 TokenType previousLexType = TokenType.Mismatch;
                 foreach (string part in parts) {
-                    TokenType type = TokenType.String;
+                    TokenType type = TokenType.Mismatch;
                     if (string.IsNullOrWhiteSpace(part)) continue;//if empty line
                     else if (part.StartsWith("//")) break;//if comment exit line loop
                     else if (int.TryParse(part, out int intOut)) type = TokenType.Int;
                     else if (float.TryParse(part, out float floatOut)) type = TokenType.Float;
-                    
-                    else switch (part) {
+                    else if (actionKeys.Contains(part)) type = TokenType.Action;
+                    else { 
+                        switch (part) {
                             case "to":
+                            case "from":
                             case "then":
                             case "when":
                             case "and":
@@ -35,19 +44,19 @@ namespace PFCTools2.Installer.PseudoParser {
                             case "<":
                                 type = TokenType.Comp;
                                 break;
-                            case "layer":
-                            case "entry":
-                            case "transition":
-                                type = TokenType.Action;
-                                break;
                             case "true":
                             case "false":
                                 type = TokenType.Bool;
                                 break;
+                            default:
+                                type = TokenType.String;
+                                break;
                         };
+                    }
 
                     posIndex++;
                     previousLexType = type;
+
                     tokenList.Add(new Token(part, type, lineIndex,posIndex));
                 }
             }
