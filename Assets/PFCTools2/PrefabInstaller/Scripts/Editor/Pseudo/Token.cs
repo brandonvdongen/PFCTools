@@ -14,6 +14,15 @@
         public bool HasType(TokenType type) {
             return (this.type & type) == type;
         }
+        public bool HasType(TokenType[] types) {
+            bool found = false;
+            foreach (var type in types) {
+                if (HasType(type)) {
+                    found = true;
+                }
+            }
+            return found;
+        }
         public bool IsType(TokenType type) {
             return this.type == type;
         }
