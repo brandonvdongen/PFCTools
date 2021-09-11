@@ -25,6 +25,14 @@ namespace PFCTools2.Installer.PseudoParser {
                         Debug.Log(clip);
                         state.motion = clip;
                     }
+                    else if (modifier.value.ToLower() == "pos") {
+                        float x = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
+                        float y = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
+
+                        ChildAnimatorState childState = layerContext.GetChildState(state);
+                        layerContext.SetStatePos(state, x, y);
+                        
+                    }
                     else if (modifier.value.ToLower() == "speed") {
                         state.speed = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
                     }

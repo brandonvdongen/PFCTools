@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEditor.Animations;
 using UnityEngine;
 
@@ -10,9 +11,7 @@ namespace PFCTools2.Installer.PseudoParser {
 
         public AnimatorLayerContext(AnimatorControllerLayer layer) {
             foreach (ChildAnimatorState childState in layer.stateMachine.states) {
-                AnimatorState state = childState.state;
-                states.Add(state.name, state);
-                
+                states.Add(childState.state.name, childState.state);
             }
             this.layer = layer;
         }
@@ -28,6 +27,30 @@ namespace PFCTools2.Installer.PseudoParser {
 
             }
 
+        }
+        public ChildAnimatorState GetChildState(AnimatorState state) {
+            foreach (ChildAnimatorState childState in layer.stateMachine.states) {
+                if (childState.state == state) {
+                    return childState;
+                }
+            }
+
+            throw new Exception("If you see this something went *REALLY* wrong, as it should be physically impossible to see this error. good luck o7");
+        }
+        public ChildAnimatorState GetChildState(string name) {
+            AnimatorState state = GetState(name);
+            return GetChildState(state);
+        }
+        public void SetStatePos(AnimatorState state, float x, float y) {
+            ChildAnimatorState[] childStates = layer.stateMachine.states;
+            for(int i = 0; i < childStates.Length; i++) {
+                ChildAnimatorState childState = childStates[i];
+                if(childState.state == state) { 
+                    childState.position = new Vector3(x*250, y*90);
+                    childStates[i] = childState;
+                }   
+            }
+            layer.stateMachine.states = childStates;
         }
 
     }

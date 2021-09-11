@@ -47,6 +47,7 @@ namespace PFCTools2.Installer.PseudoParser {
                     }
                 }
                 if (!foundAction) Tokens.Exception();
+                if(controller)EditorUtility.SetDirty(controller);
             }
             
         }
