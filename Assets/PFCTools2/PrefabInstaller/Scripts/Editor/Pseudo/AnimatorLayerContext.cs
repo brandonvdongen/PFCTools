@@ -45,8 +45,8 @@ namespace PFCTools2.Installer.PseudoParser {
             ChildAnimatorState[] childStates = layer.stateMachine.states;
             for(int i = 0; i < childStates.Length; i++) {
                 ChildAnimatorState childState = childStates[i];
-                if(childState.state == state) { 
-                    childState.position = new Vector3(x*250, y*90);
+                if(childState.state == state) {
+                    childState.position = new StateOffset(x, y).position;
                     childStates[i] = childState;
                 }   
             }

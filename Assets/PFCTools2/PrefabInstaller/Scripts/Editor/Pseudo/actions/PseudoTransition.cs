@@ -12,7 +12,14 @@ namespace PFCTools2.Installer.PseudoParser {
             List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
 
             //Get Start State
-            AnimatorState startState = layerContext.GetState(Tokens.Next(TokenType.String).value);
+            Token startToken = Tokens.Next(TokenType.String);
+            AnimatorState startState;
+            if(startToken.value.ToLower() == "any") {
+                startState = new AnimatorState() { name = "any" };
+            }
+            else {
+                startState = layerContext.GetState(startToken.value);
+            }
             //Check if next state if the 'to' operator
             if (Tokens.Next(TokenType.Operator).value != "to") Tokens.Exception();
             //Get End State
@@ -39,7 +46,7 @@ namespace PFCTools2.Installer.PseudoParser {
                     bool fixedDuration = false;
 
                     if (Tokens.Peek().HasType(TokenType.String) && Tokens.Peek().value.ToLower() == "fixed") {
-                        Tokens.Next();//Consume;
+                        Tokens.Next();//Consume fixed token;
                         fixedDuration = true;
                     }
 
@@ -95,7 +102,17 @@ namespace PFCTools2.Installer.PseudoParser {
 
         private void ProcessTransitions(ControllerContext Context, TokenStream Tokens, List<AnimatorStateTransition> transitions, AnimatorState startState, AnimatorState endState) {
             //Create Transition
-            AnimatorStateTransition Transition = startState.AddTransition(endState);
+            AnimatorStateTransition Transition;
+            AnimatorLayerContext layerContext = Context.layers[Context.activeLayer];
+            if (endState.name.ToLower() == "any") Tokens.Exception("Any cannot be used as a target, it does not accept incoming transitions.");
+            if (startState.name.ToLower() == "any") {
+                Transition = layerContext.layer.stateMachine.AddAnyStateTransition(endState);
+            }
+            else {
+               Transition = startState.AddTransition(endState);
+            }
+
+
             transitions.Add(Transition);
             Transition.hasExitTime = true;
             Transition.exitTime = 1;
@@ -128,7 +145,7 @@ namespace PFCTools2.Installer.PseudoParser {
                 else if (valueToken.value.ToLower() == "false") conditionMode = AnimatorConditionMode.IfNot;
                 else Tokens.Exception();
 
-                else Debug.LogError("Unsupported operation '" + comp + "' on type : " + valueToken.type);
+                else Tokens.Exception("Unsupported operation '" + comp + "' on type : " + valueToken.type);
             }
             else if (valueToken.type == TokenType.Int) {
                 paramType = AnimatorControllerParameterType.Int;
@@ -137,14 +154,14 @@ namespace PFCTools2.Installer.PseudoParser {
                 else if (comp == ">") conditionMode = AnimatorConditionMode.Greater;
                 else if (comp == "<") conditionMode = AnimatorConditionMode.Less;
 
-                else Debug.LogError("Unsupported operation '" + comp + "' on type : " + valueToken.type);
+                else Tokens.Exception("Unsupported operation '" + comp + "' on type : " + valueToken.type);
             }
             else if (valueToken.type == TokenType.Float) {
                 paramType = AnimatorControllerParameterType.Float;
                 if (comp == ">") conditionMode = AnimatorConditionMode.Greater;
                 else if (comp == "<") conditionMode = AnimatorConditionMode.Less;
 
-                else Debug.LogError("Unsupported operation '" + comp + "' on type : " + valueToken.type);
+                else Tokens.Exception("Unsupported operation '" + comp + "' on type : " + valueToken.type);
             }
 
             AnimatorControllerParameter param = Context.GetParameter(paramName, paramType);

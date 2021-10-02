@@ -12,16 +12,22 @@ namespace PFCTools2.Utils {
             return CreateNewTextFile("Assets/newFile.txt", content);
         }
 
-        public static TextAsset CreateNewTextFile(Object pathReference, string fileName, string content) {
+        public static TextAsset CreateNewTextFile(Object pathReference, string fileName, string content, bool replace = false) {
             string path = AssetDatabase.GetAssetPath(pathReference);
             string directory = Path.GetDirectoryName(path);
-            string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "/" + fileName);
-            return CreateNewTextFile(newPath, content);
+            string newPath = directory + "/" + fileName;
+            return CreateNewTextFile(newPath, content, replace);
         }
 
-        public static TextAsset CreateNewTextFile(string path, string content) {
-            string newPath = AssetDatabase.GenerateUniqueAssetPath(path);
-            File.WriteAllText(newPath, "");
+        public static TextAsset CreateNewTextFile(string path, string content, bool replace = false) {
+            string newPath;
+            if (replace) {
+                newPath = path;
+            }
+            else {
+                newPath = AssetDatabase.GenerateUniqueAssetPath(path);
+            }
+            File.WriteAllText(newPath, content);
             AssetDatabase.Refresh();
             return AssetDatabase.LoadAssetAtPath<TextAsset>(newPath);
         }

@@ -12,6 +12,11 @@ namespace PFCTools2.Installer.Core {
         public bool debug = false;
         public Action onConfigChange;
         public GameObject Prefab;
+        public TextAsset[] BaseLayers;
+        public TextAsset[] AdditiveLayers;
+        public TextAsset[] GestureLayers;
+        public TextAsset[] ActionLayers;
+        public TextAsset[] FXLayers;
         public abstract string PrefabTag { get; }
 
         public void Init() {

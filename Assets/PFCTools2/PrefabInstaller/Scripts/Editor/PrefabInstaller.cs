@@ -98,7 +98,7 @@ namespace PFCTools2.Installer.Core {
             createPseudoBtn.clicked += () => { FileHelper.CreateNewTextFile(template, "newFile.txt", ""); };
             ObjectField pseudoField = new ObjectField() { objectType = typeof(TextAsset) };
             ObjectField controllerField = new ObjectField() { objectType = typeof(AnimatorController) };
-            Button testPseudoBtn = new Button() { text = "Test Pseudo Code" };
+            Button testPseudoBtn = new Button() { text = "Generate Animator" };
             testPseudoBtn.clicked += () => {
                 if (controllerField.value == null) {
                     Pseudo.Parse(pseudoField.value as TextAsset);
@@ -107,11 +107,18 @@ namespace PFCTools2.Installer.Core {
                     Pseudo.Parse(pseudoField.value as TextAsset, controllerField.value as AnimatorController);
                 }
             };
+            Button exportStateDataBtn = new Button() { text = "Export State Data" };
+            exportStateDataBtn.clicked += () => {
+                if (controllerField.value != null) {
+                    Pseudo.Export(controllerField.value as AnimatorController);
+                }
+            };
 
             debugWindow.Add(createPseudoBtn);
             debugWindow.Add(pseudoField);
             debugWindow.Add(controllerField);
             debugWindow.Add(testPseudoBtn);
+            debugWindow.Add(exportStateDataBtn);
 
             //Build UI
             root.Add(refreshBtn);
@@ -229,6 +236,19 @@ namespace PFCTools2.Installer.Core {
                         }
                     }
                     DestroyImmediate(assigner);
+                }
+                if (template.FXLayers.Length > 0) {
+                    AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController;
+                    string path = AssetDatabase.GetAssetPath(controller);
+                    string directory = Path.GetDirectoryName(path);
+                    string filename = Path.GetFileNameWithoutExtension(path);
+                    string extension = Path.GetExtension(path);
+                    string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "\\" + filename + "Backup" + extension);
+                    Debug.Log(newPath);
+                    AssetDatabase.CopyAsset(path, newPath);
+                    foreach (var pseudoFile in template.FXLayers) {
+                        Pseudo.Parse(pseudoFile, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController);
+                    }
                 }
             }
             else if (mode == InstallerMode.Modify) {

@@ -46,7 +46,12 @@ namespace PFCTools2.Installer.PseudoParser {
         }
         public void Exception(string additionalInfo = "") {
             EditorUtility.ClearProgressBar();
-            throw new Exception("Unexpected " + _input[index - 1].type + " \"" + _input[index - 1].value + "\", on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+            if (additionalInfo == "") {
+                throw new Exception("Unexpected " + _input[index - 1].type + " \"" + _input[index - 1].value + "\", on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+            }
+            else {
+                throw new Exception(additionalInfo + " | on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+            }
         }
 
     }
