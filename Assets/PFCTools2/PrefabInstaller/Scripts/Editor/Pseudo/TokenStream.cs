@@ -21,7 +21,7 @@ namespace PFCTools2.Installer.PseudoParser {
         public Token Next(TokenType type) {
             Token token = _input[index++];
             if (!token.HasType(type)) {
-                Exception();
+                Exception("",type.ToString());
             }
             return token;
         }
@@ -44,13 +44,13 @@ namespace PFCTools2.Installer.PseudoParser {
         public bool EOF() {
             return index >= _input.Count;
         }
-        public void Exception(string additionalInfo = "") {
+        public void Exception(string additionalInfo = "", string expected = "") {
             EditorUtility.ClearProgressBar();
             if (additionalInfo == "") {
-                throw new Exception("Unexpected " + _input[index - 1].type + " \"" + _input[index - 1].value + "\", on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+                throw new Exception("Unexpected " + _input[index - 1].type + " \"" + _input[index - 1].value + "\", on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos + (expected != "" ? " expected: " + expected : ""));
             }
             else {
-                throw new Exception(additionalInfo + " | on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos);
+                throw new Exception(additionalInfo + " | on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos + ( expected != "" ? " expected: " + expected : ""));
             }
         }
 

@@ -99,6 +99,8 @@ namespace PFCTools.Outfitter {
                             Debug.Log(CF.GetValue(component));
                             IList list = CF.GetValue(component) as IList;
 
+                            int i = 0;
+
                             List<Component> newColliders = new List<Component>();
 
                             foreach(var collider in list) {

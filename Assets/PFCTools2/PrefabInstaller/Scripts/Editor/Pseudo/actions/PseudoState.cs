@@ -18,9 +18,10 @@ namespace PFCTools2.Installer.PseudoParser {
                 Token modifier = Tokens.Next(TokenType.String);
                 if (modifier.value.ToLower() == "motion") {
                     string clippath = Tokens.Next(TokenType.String).value;
-                    AnimationClip clip = Resources.Load<AnimationClip>(clippath);
+                    Motion clip = Resources.Load<Motion>(clippath);
                     Debug.Log(clippath);
                     Debug.Log(clip);
+                    if (clip == null) Tokens.Exception("Motion " + clippath + " not found!");
                     state.motion = clip;
                 }
                 else if (modifier.value.ToLower() == "default") {
@@ -73,11 +74,6 @@ namespace PFCTools2.Installer.PseudoParser {
                     bool on = Tokens.Next(TokenType.Bool).value == "true" ? true : false;
                     state.iKOnFeet = on;
                 }
-#if VRC_SDK_VRCSDK3
-                else if (modifier.value.ToLower() == "parameterdriver") {
-                    VRCAvatarParameterDriver driver = state.AddStateMachineBehaviour<VRCAvatarParameterDriver>();
-                }
-#endif
                 else Tokens.Exception();
 
             }

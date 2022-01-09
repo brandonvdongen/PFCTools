@@ -8,6 +8,7 @@ namespace PFCTools2.Installer.PseudoParser {
 
         public Dictionary<string, AnimatorState> states = new Dictionary<string, AnimatorState>();
         public AnimatorControllerLayer layer;
+        public AnimatorState lastInteractedState;
 
         public AnimatorLayerContext(AnimatorControllerLayer layer) {
             foreach (ChildAnimatorState childState in layer.stateMachine.states) {
@@ -18,11 +19,13 @@ namespace PFCTools2.Installer.PseudoParser {
 
         public AnimatorState GetState(string name) {
             if (states.ContainsKey(name)) {
+                lastInteractedState = states[name];
                 return states[name];
             }
             else {
                 AnimatorState newState = layer.stateMachine.AddState(name);
                 states.Add(name, newState);
+                lastInteractedState = newState;
                 return newState;
 
             }

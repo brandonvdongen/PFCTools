@@ -14,8 +14,9 @@ namespace PFCTools2.Installer.PseudoParser {
 
         public ControllerContext(string path) {
             string directory = Path.GetDirectoryName(path);
-            string fileName = Path.GetFileName(path);
-            Controller = AnimatorController.CreateAnimatorControllerAtPath(directory + "/" + fileName + "_controller.controller");
+            string fileName = Path.GetFileNameWithoutExtension(path);
+            this.Controller = AnimatorController.CreateAnimatorControllerAtPath(directory + "/" + fileName + ".controller");
+            this.Controller.RemoveLayer(0);
             RefreshControllerData();
         }
         public ControllerContext(AnimatorController Controller) {
@@ -44,6 +45,12 @@ namespace PFCTools2.Installer.PseudoParser {
                 return newParameter;
             }
 
+        }
+        public AnimatorControllerParameterType GetParameterType(string name) {
+            if (parameters.ContainsKey(name)) {
+                return parameters[name].type;
+            }
+            return new AnimatorControllerParameterType();
         }
     }
 }

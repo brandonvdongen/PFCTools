@@ -8,6 +8,8 @@ public class GameObjectVisualizer : MonoBehaviour {
     [SerializeField]
     public bool _ParentStructure = true;
     public bool _ShowDisabledParents = false;
+    [Range(0.001f,0.1f)]
+    public float _BoneSphereSize = 0.2f;
     [Header("Constraints")]
     public bool _ConstraintConnections = true;
 
@@ -23,7 +25,7 @@ public class GameObjectVisualizer : MonoBehaviour {
                     if (!child.gameObject.activeInHierarchy) {
                         Gizmos.color = Color.red;
                     }
-                    Gizmos.DrawSphere(child.position, .002f);
+                    Gizmos.DrawSphere(child.position, _BoneSphereSize);
                     if (child.parent) {
                         Gizmos.DrawLine(child.position, child.parent.position);
                     }

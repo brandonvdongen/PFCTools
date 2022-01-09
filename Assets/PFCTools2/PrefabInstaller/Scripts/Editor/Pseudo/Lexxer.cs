@@ -8,7 +8,7 @@ namespace PFCTools2.Installer.PseudoParser {
         public static List<Token> Lexxer(TextAsset file) {
 
             List<string> actionKeys = new List<string>();
-            foreach(PseudoAction action in EnabledActions) {
+            foreach(PseudoAction action in getEnabledActions()) {
                 actionKeys.Add(action.ActionKey);
             }
 
@@ -29,7 +29,7 @@ namespace PFCTools2.Installer.PseudoParser {
                     else if (float.TryParse(part, out float floatOut)) type = TokenType.Float;
                     else if (actionKeys.Contains(part)) type = TokenType.Action;
                     else { 
-                        switch (part) {
+                        switch (part.ToLower()) {
                             case "to":
                             case "from":
                             case "then":

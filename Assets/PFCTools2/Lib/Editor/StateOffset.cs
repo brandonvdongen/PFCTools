@@ -19,7 +19,7 @@ namespace PFCTools2.Installer.PseudoParser {
         public Vector3 reverse;
         public SmallStateOffset(float x, float y, float z = 0) {
             position = new Vector3(20 + (x * 210), 5 + (-y * 50), z);
-            reverse = new Vector3(20 + (x / 210), 5 + (-y / 50), z);
+            reverse = new Vector3(((x-20) / 210), (-(y-5) / 50) , z);
         }
     }
      

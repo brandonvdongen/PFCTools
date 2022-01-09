@@ -114,7 +114,7 @@ namespace PFCTools2.Installer.PseudoParser {
 
 
             transitions.Add(Transition);
-            Transition.hasExitTime = true;
+            Transition.hasExitTime = false;
             Transition.exitTime = 1;
             Transition.duration = 0;
             Transition.canTransitionToSelf = false;
