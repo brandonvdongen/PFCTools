@@ -83,25 +83,25 @@ namespace PFCTools2.Installer.PseudoParser {
             }
             export += "\n";
 
-            foreach (var layer in Context.layers) {
+            foreach (var layerContext in Context.layers) {
                 string layerExport = "";
-                layerExport += "layer " + StringUtils.parseQuotes(layer.layer.name) + "\n\n";
+                layerExport += "layer " + StringUtils.parseQuotes(layerContext.layer.name) + "\n\n";
 
-                SmallStateOffset entry = new SmallStateOffset(layer.layer.stateMachine.entryPosition.x, layer.layer.stateMachine.entryPosition.y);
-                SmallStateOffset exit = new SmallStateOffset(layer.layer.stateMachine.exitPosition.x, layer.layer.stateMachine.exitPosition.y);
-                SmallStateOffset any = new SmallStateOffset(layer.layer.stateMachine.anyStatePosition.x, layer.layer.stateMachine.anyStatePosition.y);
+                SmallStateOffset entry = new SmallStateOffset(layerContext.layer.stateMachine.entryPosition.x, layerContext.layer.stateMachine.entryPosition.y);
+                SmallStateOffset exit = new SmallStateOffset(layerContext.layer.stateMachine.exitPosition.x, layerContext.layer.stateMachine.exitPosition.y);
+                SmallStateOffset any = new SmallStateOffset(layerContext.layer.stateMachine.anyStatePosition.x, layerContext.layer.stateMachine.anyStatePosition.y);
 
                 List<TransitionData> transitionSets = new List<TransitionData>();
 
                 layerExport += "entry " + entry.reverse.x + " " + entry.reverse.y + "\n\n";
                 layerExport += "exit " + exit.reverse.x + " " + exit.reverse.y + "\n\n";
                 layerExport += "any " + any.reverse.x + " " + any.reverse.y + "\n\n";
-                Debug.Log("*****LAYER CHANGE: "+layer.layer.name+" *****");
+                //Debug.Log("*****LAYER CHANGE: "+layerContext.layer.name+" *****");
                 
-                foreach (var state in layer.layer.stateMachine.states) {
-                    Debug.Log(state.state.name);
+                foreach (var state in layerContext.layer.stateMachine.states) {
+                    //Debug.Log(state.state.name);
                     layerExport += "state " + StringUtils.parseQuotes(state.state.name) + "\n";
-                    if(layer.layer.stateMachine.defaultState == state.state) {
+                    if(layerContext.layer.stateMachine.defaultState == state.state) {
                         layerExport += "default \n";
                     }
                     StateOffset offset = new StateOffset(state.position.x, state.position.y);
@@ -159,85 +159,50 @@ namespace PFCTools2.Installer.PseudoParser {
                                 AnimatorControllerParameterType type = Context.GetParameterType(parameter.name);
                                 if (type == AnimatorControllerParameterType.Int) {
                                     if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set) {
-                                        layerExport += "set " + parameter.name + " " + int.Parse(parameter.value.ToString());
+                                        layerExport += "set " + parameter.name + " " + int.Parse(parameter.value.ToString()) + "\n";
                                     }
                                     else if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Add) {
-                                        layerExport += "add " + parameter.name + " " + int.Parse(parameter.value.ToString());
+                                        layerExport += "add " + parameter.name + " " + int.Parse(parameter.value.ToString()) + "\n";
                                     }
                                     else if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Random) {
-                                        layerExport += "random " + parameter.name + " " + int.Parse(parameter.valueMin.ToString()) + " " + int.Parse(parameter.valueMax.ToString());
+                                        layerExport += "random " + parameter.name + " " + int.Parse(parameter.valueMin.ToString()) + " " + int.Parse(parameter.valueMax.ToString()) + "\n";
                                     }
                                 }
                                 else if (type == AnimatorControllerParameterType.Float) {
                                     if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set) {
-                                        layerExport += "set " + parameter.name + " " + parameter.value.ToString(".0######");
+                                        layerExport += "set " + parameter.name + " " + parameter.value.ToString(".0######") + "\n";
                                     }
                                     else if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Add) {
-                                        layerExport += "add " + parameter.name + " " + parameter.value.ToString(".0######");
+                                        layerExport += "add " + parameter.name + " " + parameter.value.ToString(".0######") + "\n";
                                     }
                                     else if (parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Random) {
-                                        layerExport += "random " + parameter.name + " " + parameter.valueMin.ToString(".0######") + " " + parameter.valueMax.ToString(".0######");
+                                        layerExport += "random " + parameter.name + " " + parameter.valueMin.ToString(".0######") + " " + parameter.valueMax.ToString(".0######") + "\n";
                                     }
                                 }
                                 else if(type == AnimatorControllerParameterType.Bool) {
                                     if(parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Set) {
-                                        layerExport += "set " + parameter.name + " " + (parameter.value == 1 ? "true" : "false");
+                                        layerExport += "set " + parameter.name + " " + (parameter.value == 1 ? "true" : "false") + "\n";
                                     }
                                     else if(parameter.type == VRC.SDKBase.VRC_AvatarParameterDriver.ChangeType.Random) {
-                                        layerExport += "random " + parameter.name + " " + (parameter.chance);
+                                        layerExport += "random " + parameter.name + " " + (parameter.chance) + "\n";
                                     }
                                 }
-                                layerExport += "\n";
-
                             }
-                            layerExport += "\n";
                         }
 #endif
                     }
-
-
-                    
                     foreach (var transition in state.state.transitions) {
-                        bool found = false;
-                        foreach(TransitionData data in transitionSets) {
-                            if (data.start != state.state) continue;
-                            else if (data.end != transition.destinationState) continue;
-                            else if (data.hasExitTime != transition.hasExitTime) continue;
-                            else if (data.exitTime != transition.exitTime) continue;
-                            else if (data.hasFixedDuration != transition.hasFixedDuration) continue;
-                            else if (data.duration != transition.duration) continue;
-                            else if (data.interruptionSource != transition.interruptionSource) continue;
-                            else if (data.orderedInterruption != transition.orderedInterruption) continue;
-                            else if (data.offset != transition.offset) continue;
-                            else if (data.canTransitionToSelf != transition.canTransitionToSelf) continue;
-                            else {
-                                data.transitions.Add(transition);
-                                found = true;
-                            }
-                        }
-                        if (!found) {
-                            TransitionData data = new TransitionData();
-                            data.start = state.state;
-                            data.end = transition.destinationState;
-                            data.hasExitTime = transition.hasExitTime;
-                            data.exitTime = transition.exitTime;
-                            data.hasFixedDuration = transition.hasFixedDuration;
-                            data.duration = transition.duration;
-                            data.interruptionSource = transition.interruptionSource;
-                            data.orderedInterruption = transition.orderedInterruption;
-                            data.offset = transition.offset;
-                            data.canTransitionToSelf = transition.canTransitionToSelf;
-                            data.transitions = new List<AnimatorStateTransition>();
-                            data.transitions.Add(transition);
-                            transitionSets.Add(data);
-                        }
+                        ProcessTransition(state.state.name, transition, transitionSets);
                     }
-
-                    
                     layerExport += "\n";
                 }
+
+                foreach (var transition in layerContext.layer.stateMachine.anyStateTransitions) {
+                    ProcessTransition("Any", transition, transitionSets);
+                }
+
                 foreach (TransitionData data in transitionSets) {
-                    layerExport += "transition " + StringUtils.parseQuotes(data.start.name) + " to " + StringUtils.parseQuotes(data.end.name);
+                    layerExport += "transition " + StringUtils.parseQuotes(data.start) + " to " + StringUtils.parseQuotes(data.end.name);
                     string conditions = "";
                     bool firstTransition = true;
                     foreach (AnimatorStateTransition transition in data.transitions) {
@@ -270,15 +235,52 @@ namespace PFCTools2.Installer.PseudoParser {
                     }
                     layerExport += "\n";   
                 }
-                Debug.Log(layerExport);
                 export += layerExport;
             }
             FileHelper.CreateNewTextFile(animatorController, animatorController.name + "_Export.txt", export, true);
 
         }
+
+        private static void ProcessTransition(string startName, AnimatorStateTransition transition, List<TransitionData> transitionSets) {
+            bool found = false;
+            foreach (TransitionData data in transitionSets) {
+                if (data.start != startName) continue;
+                else if (data.end != transition.destinationState) continue;
+                else if (data.hasExitTime != transition.hasExitTime) continue;
+                else if (data.exitTime != transition.exitTime) continue;
+                else if (data.hasFixedDuration != transition.hasFixedDuration) continue;
+                else if (data.duration != transition.duration) continue;
+                else if (data.interruptionSource != transition.interruptionSource) continue;
+                else if (data.orderedInterruption != transition.orderedInterruption) continue;
+                else if (data.offset != transition.offset) continue;
+                else if (data.canTransitionToSelf != transition.canTransitionToSelf) continue;
+                else {
+                    data.transitions.Add(transition);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                TransitionData data = new TransitionData();
+                data.start = startName;
+                data.end = transition.destinationState;
+                data.hasExitTime = transition.hasExitTime;
+                data.exitTime = transition.exitTime;
+                data.hasFixedDuration = transition.hasFixedDuration;
+                data.duration = transition.duration;
+                data.interruptionSource = transition.interruptionSource;
+                data.orderedInterruption = transition.orderedInterruption;
+                data.offset = transition.offset;
+                data.canTransitionToSelf = transition.canTransitionToSelf;
+                data.transitions = new List<AnimatorStateTransition>();
+                data.transitions.Add(transition);
+                transitionSets.Add(data);
+            }
+        }
+
         private struct TransitionData {
             public bool isDefault;
-            public AnimatorState start;
+            public string start;
             public AnimatorState end;
             public bool hasExitTime;
             public float exitTime;
