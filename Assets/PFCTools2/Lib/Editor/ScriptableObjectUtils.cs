@@ -17,7 +17,7 @@ namespace PFCTools2.Utils {
 			//else if (Path.GetExtension(path) != "") {
 			//path = path.Replace(Path.GetFileName(AssetDatabase.GetAssetPath(Selection.activeObject)), "");
 			//}
-			Debug.Log(path);
+			//Debug.Log(path);
 			Directory.CreateDirectory(path);
 			string assetPathAndName = AssetDatabase.GenerateUniqueAssetPath(path + "/" + name + ".asset");
 			AssetDatabase.CreateAsset(asset, assetPathAndName);

@@ -15,7 +15,7 @@ namespace PFCTools2.Installer.PseudoParser {
 
             while (!Tokens.EOF() && Tokens.Peek().HasType(TokenType.String)) {
                 Token modifier = Tokens.Next(TokenType.String);
-                Debug.Log(modifier.value);
+                //Debug.Log(modifier.value);
                 
                 if (modifier.value.ToLower() == "localonly") {
                     driver.localOnly = true;
@@ -34,7 +34,7 @@ namespace PFCTools2.Installer.PseudoParser {
                     if (modifier.value.ToLower() == "set") {
                         if (valueToken.type != TokenType.Bool) Tokens.Exception("Incorrect type", "Bool");
                         driverParameter.type = VRCAvatarParameterDriver.ChangeType.Set;
-                        Debug.Log(valueToken.value);
+                        //Debug.Log(valueToken.value);
                         driverParameter.value = bool.Parse(valueToken.value)?1:0;
                         
                     }

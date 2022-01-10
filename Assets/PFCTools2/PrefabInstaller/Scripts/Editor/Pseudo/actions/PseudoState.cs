@@ -19,8 +19,8 @@ namespace PFCTools2.Installer.PseudoParser {
                 if (modifier.value.ToLower() == "motion") {
                     string clippath = Tokens.Next(TokenType.String).value;
                     Motion clip = Resources.Load<Motion>(clippath);
-                    Debug.Log(clippath);
-                    Debug.Log(clip);
+                    //Debug.Log(clippath);
+                    //Debug.Log(clip);
                     if (clip == null) Tokens.Exception("Motion " + clippath + " not found!");
                     state.motion = clip;
                 }
