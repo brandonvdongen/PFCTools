@@ -12,19 +12,20 @@ namespace PFCTools2.Installer.PseudoParser {
 
         public AnimatorLayerContext(AnimatorControllerLayer layer) {
             foreach (ChildAnimatorState childState in layer.stateMachine.states) {
-                states.Add(childState.state.name, childState.state);
+                states.Add(childState.state.name.ToLower(), childState.state);
             }
             this.layer = layer;
         }
 
         public AnimatorState GetState(string name) {
-            if (states.ContainsKey(name)) {
-                lastInteractedState = states[name];
-                return states[name];
+            string newName = name.ToLower();
+            if (states.ContainsKey(newName)) {
+                lastInteractedState = states[newName];
+                return states[newName];
             }
             else {
                 AnimatorState newState = layer.stateMachine.AddState(name);
-                states.Add(name, newState);
+                states.Add(newName, newState);
                 lastInteractedState = newState;
                 return newState;
 
