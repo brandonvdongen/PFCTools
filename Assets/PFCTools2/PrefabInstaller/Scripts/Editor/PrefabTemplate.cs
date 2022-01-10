@@ -24,10 +24,10 @@ namespace PFCTools2.Installer.Core {
         }
 
         public virtual VisualElement PrefabConfigUI() {
-            return new Label("No Settings available for this prefab. " + GetType());
+            return new Label("No Settings available for this prefab.");
         }
         internal VisualElement CustomizerUI() {
-            return new Label("No Customizer available for this prefab " + GetType());
+            return new Label("No Customizer available for this prefab.");
         }
 
         public virtual bool IsInstalledOn(AvatarDefinition avatar) {

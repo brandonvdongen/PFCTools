@@ -238,8 +238,8 @@ namespace PFCTools2.Installer.Core {
                     DestroyImmediate(assigner);
                 }
                 List<PositionAssigner> positionAssigners = new List<PositionAssigner>(Prefab.GetComponentsInChildren<PositionAssigner>());
-                foreach(PositionAssigner assigner in positionAssigners) {
-                    foreach(PositionOffsetEntry poe in assigner.Offsets) {
+                foreach (PositionAssigner assigner in positionAssigners) {
+                    foreach (PositionOffsetEntry poe in assigner.Offsets) {
                         List<string> entryTags = new List<string>(poe.Meta.Split(char.Parse(",")));
                         bool tagFound = false;
                         foreach (string tag in entryTags) {
@@ -254,18 +254,20 @@ namespace PFCTools2.Installer.Core {
                     DestroyImmediate(assigner);
 
                 }
+                AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController;
+                if (EditorUtility.DisplayDialog("Animator Layer Import", "Would you like to import the prefab's Animation layers into your avatar's animator?\n(A backup of your original animator will be made automatically)", "Import Animation Layers", "Skip Import")) {
+                    if (template.FXLayers.Length > 0) {
 
-                if (template.FXLayers.Length > 0) {
-                    AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController;
-                    string path = AssetDatabase.GetAssetPath(controller);
-                    string directory = Path.GetDirectoryName(path);
-                    string filename = Path.GetFileNameWithoutExtension(path);
-                    string extension = Path.GetExtension(path);
-                    string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "\\" + filename + "Backup" + extension);
-                    //Debug.Log(newPath);
-                    AssetDatabase.CopyAsset(path, newPath);
-                    foreach (var pseudoFile in template.FXLayers) {
-                        Pseudo.Parse(pseudoFile, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController);
+                        string path = AssetDatabase.GetAssetPath(controller);
+                        string directory = Path.GetDirectoryName(path);
+                        string filename = Path.GetFileNameWithoutExtension(path);
+                        string extension = Path.GetExtension(path);
+                        string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "\\" + filename + "Backup" + extension);
+                        //Debug.Log(newPath);
+                        AssetDatabase.CopyAsset(path, newPath);
+                        foreach (var pseudoFile in template.FXLayers) {
+                            Pseudo.Parse(pseudoFile, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController);
+                        }
                     }
                 }
             }
