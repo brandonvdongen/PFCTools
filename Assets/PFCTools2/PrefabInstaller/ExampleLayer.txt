@@ -1,0 +1,96 @@
+//Create Layer
+layer test
+
+//postion entry to 0 1
+entry 0 0
+
+//postion exit to 0 2
+exit 0 1
+
+//position any to 1 0
+any 1 0
+
+//assign motion to a sate
+state motionTest
+pos 0 -1
+motion "PFCDiceKit/Animations/ExampleTest"
+
+//create state multiplierTest with speed 2 and multiplier on variable test
+state speedTest
+pos 0 -2
+speed 2
+multiplier test
+
+//create state motiontime with motiontime set to a variable
+state motiontimeTest
+pos 0 -3
+motiontime test
+
+//create state mirror with mirror enabled
+state mirrorTest
+pos 0 -4
+mirror true
+
+//create state mirrorParam with mirror enabled on a parameter instead
+state mirrorParamTest
+pos 0 -5
+mirror test
+
+//create state with cycle value
+state cycleTest
+pos 0 -6
+cycle 1
+
+//create state with FootIK on
+state footIKTest
+pos 0 -7
+footIK true
+
+//create state with Writedefaults off
+state writeDefaultsOffTest
+pos 0 -8
+writedefaults false
+
+//Create StateA
+state StateA
+pos 1 0
+
+//Create StateB
+state StateB
+pos 1 -2
+
+//Create ParamterDriverTest
+state ParameterDriverTest
+pos 1 -3
+vrcparameterdriver
+localonly
+set test1 true
+set floatParam 1.0
+set intParam 1
+add floatParam 0.1
+add intParam 2
+random floatParam 0.5 1.0
+random test1 0.5
+
+
+//Create Transition from A to B that uses parameters
+transition StateA to StateB when boolParam == true and intParam != 1 or floatParam > 0.5 or test1 == true and test4 == false or hello == 1
+//Set HasExitTime and set time to given value
+exittime 1
+//Set Duration to given value, fixed tag optional to set fixedduration
+duration 2 fixed
+//Set Offset value
+offset 1
+//Set interruption source
+interruption current
+interruption next
+interruption currentthennext
+interruption nextthencurrent ordered
+//Set "can transition to self" 
+cantransitiontoself
+
+
+
+//Create Secondary A->B transition for testing purposes
+transition StateA to StateB when test1 == false
+transition StateB to StateA
