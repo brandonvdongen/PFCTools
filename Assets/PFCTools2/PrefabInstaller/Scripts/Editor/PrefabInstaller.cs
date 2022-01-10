@@ -214,8 +214,8 @@ namespace PFCTools2.Installer.Core {
                 GameObject Prefab = PrefabUtility.InstantiatePrefab(template.Prefab) as GameObject;
                 Prefab.transform.parent = currentAvatar.transform;
 
-                List<ConstraintAssigner> assigners = new List<ConstraintAssigner>(Prefab.GetComponentsInChildren<ConstraintAssigner>());
-                foreach (ConstraintAssigner assigner in assigners) {
+                List<ConstraintAssigner> constraintAssigner = new List<ConstraintAssigner>(Prefab.GetComponentsInChildren<ConstraintAssigner>());
+                foreach (ConstraintAssigner assigner in constraintAssigner) {
                     foreach (HumanBoneEntry hbe in assigner.Sources) {
                         IConstraint constraint = assigner.TargetConstraint as IConstraint;
                         Transform bone = currentAvatar.Animator.GetBoneTransform(hbe.targetBone);
@@ -237,6 +237,24 @@ namespace PFCTools2.Installer.Core {
                     }
                     DestroyImmediate(assigner);
                 }
+                List<PositionAssigner> positionAssigners = new List<PositionAssigner>(Prefab.GetComponentsInChildren<PositionAssigner>());
+                foreach(PositionAssigner assigner in positionAssigners) {
+                    foreach(PositionOffsetEntry poe in assigner.Offsets) {
+                        List<string> entryTags = new List<string>(poe.Meta.Split(char.Parse(",")));
+                        bool tagFound = false;
+                        foreach (string tag in entryTags) {
+                            if (metaTags.Contains(tag)) {
+                                tagFound = true;
+                            }
+                        }
+                        if (tagFound) {
+                            assigner.transform.position = poe.offset;
+                        }
+                    }
+                    DestroyImmediate(assigner);
+
+                }
+
                 if (template.FXLayers.Length > 0) {
                     AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController;
                     string path = AssetDatabase.GetAssetPath(controller);
@@ -244,7 +262,7 @@ namespace PFCTools2.Installer.Core {
                     string filename = Path.GetFileNameWithoutExtension(path);
                     string extension = Path.GetExtension(path);
                     string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "\\" + filename + "Backup" + extension);
-                    Debug.Log(newPath);
+                    //Debug.Log(newPath);
                     AssetDatabase.CopyAsset(path, newPath);
                     foreach (var pseudoFile in template.FXLayers) {
                         Pseudo.Parse(pseudoFile, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController);

@@ -6,7 +6,6 @@ namespace PFCTools2.Installer.Core {
     
     public class ConstraintAssigner : MonoBehaviour {
         public Behaviour TargetConstraint;
-        public string key;
         public ConstraintAssignerMode Mode; 
         public HumanBoneEntry[] Sources;
     }
