@@ -101,10 +101,10 @@ namespace PFCTools2.Installer.Core {
             Button testPseudoBtn = new Button() { text = "Generate Animator" };
             testPseudoBtn.clicked += () => {
                 if (controllerField.value == null) {
-                    Pseudo.Parse(pseudoField.value as TextAsset);
+                    Pseudo.Parse(pseudoField.value as TextAsset, currentAvatar);
                 }
                 else {
-                    Pseudo.Parse(pseudoField.value as TextAsset, controllerField.value as AnimatorController);
+                    Pseudo.Parse(pseudoField.value as TextAsset, currentAvatar, controllerField.value as AnimatorController);
                 }
             };
             Button exportStateDataBtn = new Button() { text = "Export State Data" };
@@ -254,9 +254,9 @@ namespace PFCTools2.Installer.Core {
                     DestroyImmediate(assigner);
 
                 }
-                AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController;
-                if (EditorUtility.DisplayDialog("Animator Layer Import", "Would you like to import the prefab's Animation layers into your avatar's animator?\n(A backup of your original animator will be made automatically)", "Import Animation Layers", "Skip Import")) {
-                    if (template.FXLayers.Length > 0) {
+                AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX);
+                if (EditorUtility.DisplayDialog("Animator Layer Import", "Would you like to import the prefab's Animation layers into your avatar's animator?\n(A backup of your animator will be made just in case)", "Import Animation Layers", "Skip Import")) {
+                    if (template.FXLayers.Length > 0 && controller != null) {
 
                         string path = AssetDatabase.GetAssetPath(controller);
                         string directory = Path.GetDirectoryName(path);
@@ -266,7 +266,7 @@ namespace PFCTools2.Installer.Core {
                         //Debug.Log(newPath);
                         AssetDatabase.CopyAsset(path, newPath);
                         foreach (var pseudoFile in template.FXLayers) {
-                            Pseudo.Parse(pseudoFile, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX) as AnimatorController);
+                            Pseudo.Parse(pseudoFile, currentAvatar, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX));
                         }
                     }
                 }
@@ -276,6 +276,25 @@ namespace PFCTools2.Installer.Core {
                 template.BeforePrefabRemove();
                 DestroyImmediate(prefab);
                 template.AfterPrefabRemove();
+                AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX);
+                if (controller) {
+                    if (EditorUtility.DisplayDialog("Delete Imported Layers", "Would you like to Delete the prefab's animation layers from your avatar's animator?\n(A backup of your animator will be made just in case)", "Delete Layers", "Keep Layers")) {
+                        if (template.FXLayers.Length > 0 && controller != null) {
+                            string path = AssetDatabase.GetAssetPath(controller);
+                            string directory = Path.GetDirectoryName(path);
+                            string filename = Path.GetFileNameWithoutExtension(path);
+                            string extension = Path.GetExtension(path);
+                            string newPath = AssetDatabase.GenerateUniqueAssetPath(directory + "\\" + filename + "Backup" + extension);                            
+                            AssetDatabase.CopyAsset(path, newPath);
+                            foreach (var pseudoFile in template.FXLayers) {
+                                Pseudo.Remove(pseudoFile, currentAvatar, controller);
+                            }
+                        }
+
+                    }
+
+                }
+
             }
             onConfigChange();
         }

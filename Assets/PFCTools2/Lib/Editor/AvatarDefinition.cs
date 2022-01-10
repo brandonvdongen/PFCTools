@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor.Animations;
 using VRC.SDK3.Avatars.Components;
 using VRC.SDK3.Avatars.ScriptableObjects;
 
@@ -20,10 +21,10 @@ namespace PFCTools2.Utils {
             this.descriptor = descriptor;
         }
 
-        public RuntimeAnimatorController GetLayer(VRCAvatarDescriptor.AnimLayerType type) {
+        public AnimatorController GetLayer(VRCAvatarDescriptor.AnimLayerType type) {
             foreach (VRCAvatarDescriptor.CustomAnimLayer layer in descriptor.baseAnimationLayers) {
                 if (layer.type == type) {
-                    return layer.animatorController;
+                    return layer.animatorController as AnimatorController;
                 }
             }
             return null;
