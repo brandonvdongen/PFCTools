@@ -2,17 +2,18 @@
 using UnityEditor.Animations;
 using UnityEngine;
 using UnityEditor;
+using PFCTools2.Utils;
 
 namespace PFCTools2.Installer.PseudoParser {
     public class PseudoTransition : PseudoAction {
 
         public override string ActionKey => "transition";
-        public override ControllerContext Process(ControllerContext Context, TokenStream Tokens) {
-            AnimatorLayerContext layerContext = Context.layers[Context.activeLayer];
+        public override ControllerContext Process(ControllerContext context, TokenStream tokenStream, AvatarDefinition currentAvatar) {
+            AnimatorLayerContext layerContext = context.layers[context.activeLayer];
             List<AnimatorStateTransition> transitions = new List<AnimatorStateTransition>();
 
             //Get Start State
-            Token startToken = Tokens.Next(TokenType.String);
+            Token startToken = tokenStream.Next(TokenType.String);
             AnimatorState startState;
             if(startToken.value.ToLower() == "any") {
                 startState = new AnimatorState() { name = "any" };
@@ -21,32 +22,32 @@ namespace PFCTools2.Installer.PseudoParser {
                 startState = layerContext.GetState(startToken.value);
             }
             //Check if next state if the 'to' operator
-            if (Tokens.Next(TokenType.Operator).value != "to") Tokens.Exception();
+            if (tokenStream.Next(TokenType.Operator).value != "to") tokenStream.Exception();
             //Get End State
-            AnimatorState endState = layerContext.GetState(Tokens.Next(TokenType.String).value);
+            AnimatorState endState = layerContext.GetState(tokenStream.Next(TokenType.String).value);
             
-            ProcessTransitions(Context, Tokens, transitions, startState, endState);
+            ProcessTransitions(context, tokenStream, transitions, startState, endState);
             //if OR operator exists, rerun transition creation for a secondary transition.
-            while (!Tokens.EOF() && Tokens.Peek().HasType(TokenType.Operator) && Tokens.Peek().value == "or") {
-                ProcessTransitions(Context, Tokens, transitions, startState, endState);
+            while (!tokenStream.EOF() && tokenStream.Peek().HasType(TokenType.Operator) && tokenStream.Peek().value == "or") {
+                ProcessTransitions(context, tokenStream, transitions, startState, endState);
             }
 
             //read and set config for transitions for that transitions.
-            while(!Tokens.EOF() && Tokens.Peek().HasType(TokenType.String)) {
-                Token token = Tokens.Next(TokenType.String);
+            while(!tokenStream.EOF() && tokenStream.Peek().HasType(TokenType.String)) {
+                Token token = tokenStream.Next(TokenType.String);
                 if (token.value.ToLower() == "exittime") {
-                    float exitTime = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
+                    float exitTime = float.Parse(tokenStream.Next(new[] { TokenType.Int, TokenType.Float }).value);
                     foreach (AnimatorStateTransition transition in transitions) {
                         transition.hasExitTime = true;
                         transition.exitTime = exitTime;
                     }
                 }
                 else if (token.value.ToLower() == "duration") {
-                    float duration = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
+                    float duration = float.Parse(tokenStream.Next(new[] { TokenType.Int, TokenType.Float }).value);
                     bool fixedDuration = false;
 
-                    if (Tokens.Peek().HasType(TokenType.String) && Tokens.Peek().value.ToLower() == "fixed") {
-                        Tokens.Next();//Consume fixed token;
+                    if (tokenStream.Peek().HasType(TokenType.String) && tokenStream.Peek().value.ToLower() == "fixed") {
+                        tokenStream.Next();//Consume fixed token;
                         fixedDuration = true;
                     }
 
@@ -56,13 +57,13 @@ namespace PFCTools2.Installer.PseudoParser {
                     }
                 }
                 else if (token.value.ToLower() == "offset") {
-                    float offset = float.Parse(Tokens.Next(new[] { TokenType.Int, TokenType.Float }).value);
+                    float offset = float.Parse(tokenStream.Next(new[] { TokenType.Int, TokenType.Float }).value);
                     foreach (AnimatorStateTransition transition in transitions) {
                         transition.offset = offset;
                     }
                 }
                 else if (token.value.ToLower() == "interruption") {
-                    Token type = Tokens.Next(TokenType.String);
+                    Token type = tokenStream.Next(TokenType.String);
                     TransitionInterruptionSource source = TransitionInterruptionSource.None;
                     bool ordered = false;
                     switch (type.value.ToLower()) {
@@ -79,8 +80,8 @@ namespace PFCTools2.Installer.PseudoParser {
                             source = TransitionInterruptionSource.DestinationThenSource;
                             break;
                     }
-                    if (Tokens.Peek().HasType(TokenType.String) && Tokens.Peek().value.ToLower() == "ordered") {
-                        Tokens.Next();//Consume Ordered;
+                    if (tokenStream.Peek().HasType(TokenType.String) && tokenStream.Peek().value.ToLower() == "ordered") {
+                        tokenStream.Next();//Consume Ordered;
                         ordered = true;
                     }
                     foreach (AnimatorStateTransition transition in transitions) {
@@ -93,11 +94,11 @@ namespace PFCTools2.Installer.PseudoParser {
                         transition.canTransitionToSelf = true;
                     }
                 }
-                else Tokens.Exception();
+                else tokenStream.Exception();
 
             }
 
-            return Context;
+            return context;
         }
 
         private void ProcessTransitions(ControllerContext Context, TokenStream Tokens, List<AnimatorStateTransition> transitions, AnimatorState startState, AnimatorState endState) {
