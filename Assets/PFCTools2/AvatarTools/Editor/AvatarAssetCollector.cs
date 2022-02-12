@@ -38,186 +38,155 @@ namespace PFCTools2.AvatarTools {
             return false;
         }
 
-        static void ExportAvatar() {
-
-
-
-            GameObject avatar = Selection.activeObject as GameObject;
-
-
-
-            Object root = avatar;
-            List<Object> prefabs = new List<Object>();
-            List<Material> materials = new List<Material>();
-            List<Texture> textures = new List<Texture>();
-            List<Object> meshes = new List<Object>();
-            List<AudioClip> sounds = new List<AudioClip>();
-
-            //Add the selected object to the selection if it's a asset.
-            if (AssetDatabase.GetAssetPath(avatar) != "") {
-                root = avatar;
-            }
-
-            //Find parent prefabs and add them to the selection 
-            int maxDepth = 100;
-            GameObject parentPrefab = PrefabUtility.GetCorrespondingObjectFromSource(avatar);
-            while (parentPrefab != null && maxDepth > 0) {
-                if (PrefabUtility.GetPrefabAssetType(parentPrefab) == PrefabAssetType.Model) {
-                    meshes.Add(parentPrefab);
+        public static void moveFiles(List<Object> files, string assetPath) {
+            foreach (Object file in files) {
+                string path = AssetDatabase.GetAssetPath(file);
+                string fileName = Path.GetFileName(path);
+                if (assetPath == "") {
+                    AssetDatabase.MoveAsset(path, $"Assets/{fileName}");
                 }
                 else {
-                    prefabs.Add(parentPrefab);
+                    AssetDatabase.MoveAsset(path, $"Assets/{assetPath}/{fileName}");
+                }
+
+            }
+        }
+        public static void moveFiles(Object file, string assetPath) {
+            List<Object> files = new List<Object>();
+            files.Add(file);
+            moveFiles(files, assetPath);
+        }
+
+        private class DirectoryTable {
+
+            public string rootPath;
+
+            public DirectoryTable(string rootPath) {
+                this.rootPath = rootPath;
+            }
+
+            private Dictionary<string, string> _paths = new Dictionary<string, string>();
+            public Dictionary<string, string> Paths { get => _paths; }
+            public void Add(string orgPath, string destPath) {
+                if (_paths.ContainsKey(orgPath)) {
+                    if (_paths[orgPath] == destPath) {
+                        string newPath = Path.GetDirectoryName(destPath);
+                        _paths[orgPath] = $"Assets/{rootPath}/{newPath}/Shared";
+                    }
+                }
+                else {
+                    _paths.Add(orgPath, $"Assets/{rootPath}/{destPath}");
+                }
+            }
+            public void Add(Object _object, string destPath) {
+                string orgPath = AssetDatabase.GetAssetPath(_object);
+                Add(orgPath, destPath);
+            }
+
+        }
+
+        static void ExportAvatar() {
+
+            GameObject prefab = Selection.activeGameObject as GameObject;
+            DirectoryTable directories = new DirectoryTable(prefab.name);
+
+            EditorUtility.DisplayProgressBar("Fetching Avatar Files", "Processing Avatar.", 0);
+
+
+            //See if the Selected object is part of a scene asset, if so make it the root.
+            if (prefab.scene != null) {
+                if (prefab.scene.path != "") {
+                    directories.Add(prefab.scene.path, "");
+                }
+            }
+
+            //Get Materials and Textures
+            foreach (Renderer _renderer in prefab.GetComponentsInChildren<Renderer>(true)) {
+                foreach (Material _material in _renderer.sharedMaterials) {
+                    directories.Add(_material, "Materials");
+
+                    foreach (string name in _material.GetTexturePropertyNames()) {
+                        Texture _texture = _material.GetTexture(name);
+                        if (_texture != null) {
+                            directories.Add(_texture, "Textures");
+                        }
+                    }
+                }
+                if (_renderer is SkinnedMeshRenderer) {
+                    SkinnedMeshRenderer smr = _renderer as SkinnedMeshRenderer;
+                    directories.Add(smr.sharedMesh, "Models");
+                }
+            }
+
+            //Get Sounds
+            foreach (var a in prefab.GetComponentsInChildren<AudioSource>(true)) {
+                directories.Add(a.clip, "Sound");
+            }
+
+            //Get Main Prefabs
+            int maxDepth = 100;
+            GameObject parentPrefab = PrefabUtility.GetCorrespondingObjectFromSource(prefab);
+            while (parentPrefab != null && maxDepth > 0) {
+                if (PrefabUtility.GetPrefabAssetType(parentPrefab) == PrefabAssetType.Model) {
+                    directories.Add(parentPrefab, "Models");
+                }
+                else {
+                    directories.Add(parentPrefab, "Prefabs");
                 }
 
                 parentPrefab = PrefabUtility.GetCorrespondingObjectFromSource(parentPrefab);
                 maxDepth--;
             }
 
-
-            //Find all AudioSources
-            List<AudioSource> audioSources = new List<AudioSource>(avatar.GetComponentsInChildren<AudioSource>(true));
-
-
-            //find all renderers
-            List<Renderer> renderers = new List<Renderer>(avatar.GetComponentsInChildren<Renderer>(true));
-            //go through al renderers (mesh, particle, trail, etc)
-            foreach (Renderer r in renderers) {
-                //fetch all materials from the renderers
-                foreach (Material m in r.sharedMaterials) {
-                    materials.Add(m);
-                    //fetch all textures from the material
-                    foreach (string name in m.GetTexturePropertyNames()) {
-                        Texture tex = m.GetTexture(name);
-                        if (tex != null) {
-                            textures.Add(tex);
-                        }
-                    }
-
-                }
-                //if the renderer is a skinned mesh renderer fetch the mesh
-                if (r is SkinnedMeshRenderer) {
-                    SkinnedMeshRenderer smr = r as SkinnedMeshRenderer;
-                    Object prefab = AssetDatabase.LoadAssetAtPath(AssetDatabase.GetAssetPath(smr.sharedMesh), typeof(Object));
-                    meshes.Add(prefab);
-                    Debug.Log($"Fetch Mesh: {prefab}", prefab);
-                }
-
-
-            }
-            //See if the Selected object is part of a scene asset, if so make it the root.
-            if (avatar.scene != null) {
-                SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath(avatar.scene.path, typeof(SceneAsset)) as SceneAsset;
-                if (sceneAsset != null) {
-                    root = sceneAsset;
-                }
-            }
-
-            //Restructure all files in new folders.
-            if (materials.Count > 0) Directory.CreateDirectory($"Assets/{avatar.name}/Materials");
-            if (textures.Count > 0) Directory.CreateDirectory($"Assets/{avatar.name}/Textures");
-            if (meshes.Count > 0) Directory.CreateDirectory($"Assets/{avatar.name}/Models");
-            if (prefabs.Count > 0) Directory.CreateDirectory($"Assets/{avatar.name}/Prefabs");
-            if(audioSources.Count >0) Directory.CreateDirectory($"Assets/{avatar.name}/Sounds");
-            //Collect all Audio
-
-
-
-            AssetDatabase.Refresh();
-
-            //go through all sound sources
-            foreach (var a in audioSources) {
-                string path = AssetDatabase.GetAssetPath(a.clip);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Sounds/{Path.GetFileName(path)}");
-            }
-
-            
-            foreach (var mat in materials) {
-                string path = AssetDatabase.GetAssetPath(mat);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Materials/{fileName}");
-            }
-
-            foreach (var tex in textures) {
-                string path = AssetDatabase.GetAssetPath(tex);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Textures/{fileName}");
-            }
-
-            foreach (var model in meshes) {
-                string path = AssetDatabase.GetAssetPath(model);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Models/{fileName}");
-            }
-
-            foreach (var prefab in prefabs) {
-                string path = AssetDatabase.GetAssetPath(prefab);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Prefabs/{fileName}");
-            }
-
-            {
-                string path = AssetDatabase.GetAssetPath(root);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/{fileName}");
-            }
-
-            //Handle Animator and animations
-
-            Dictionary<string, string> animations = new Dictionary<string, string>();
-
-            Animator animator = avatar.GetComponent<Animator>();
+            Animator animator = prefab.GetComponent<Animator>();
             if (animator.runtimeAnimatorController != null) {
                 AnimatorController controller = animator.runtimeAnimatorController as AnimatorController;
-                Directory.CreateDirectory($"Assets/{avatar.name}/Layers");
-                AssetDatabase.Refresh();
-
-                string path = AssetDatabase.GetAssetPath(controller);
-                string fileName = Path.GetFileName(path);
-                AssetDatabase.MoveAsset(path, $"Assets/{avatar.name}/Layers/{fileName}");
-
+                directories.Add(controller, "Layers");
                 if (controller.animationClips.Length > 0) {
                     foreach (var layer in controller.layers) {
-                        string dir = $"Assets/{avatar.name}/Animations/{layer.name}";
                         foreach (var childState in layer.stateMachine.states) {
                             Motion anim = childState.state.motion;
                             if (anim == null) continue;
-                            string aPath = AssetDatabase.GetAssetPath(anim);
-                            string aFileName = Path.GetFileName(aPath);
-
-
-                            if (animations.ContainsKey(aPath)) {
-                                if (animations[aPath] != dir) {
-                                    animations[aPath] = $"Assets/{avatar.name}/Animations/shared";
-                                }
-                            }
-                            else {
-                                animations.Add(aPath, dir);
-                            }
+                            directories.Add(anim, $"Animations/{layer.name}");
                         }
-                    }
-                    List<string> directories = new List<string>();
-                    foreach (string dir in animations.Values) {
-                        if (!directories.Contains(dir)) {
-                            Directory.CreateDirectory(dir);
-                            Debug.Log($"Create: {dir}");
-                            directories.Add(dir);
-                        }
-                    }
-                    AssetDatabase.Refresh();
-                    foreach (string animPath in animations.Keys) {
-
-                        if (animPath != "" && animPath != null) {
-                            AssetDatabase.MoveAsset(animPath, $"{animations[animPath]}/{Path.GetFileName(animPath)}");
-                            Debug.Log($"move: {animPath} to {animations[animPath]}/{Path.GetFileName(animPath)}");
-                        }
-
                     }
                 }
-                AssetDatabase.Refresh();
             }
-            //Selection.objects = objects.ToArray();
+
+            //Process files//////////////////////////////////////////////////////////////////////////////////////////////
+            int i = 1;
+            List<string> _directoryList = new List<string>();
+            foreach (string value in directories.Paths.Values) {
+                EditorUtility.DisplayProgressBar("Fetching Avatar Files", "Processing Folders.", i / directories.Paths.Count);
+
+                if (!_directoryList.Contains(value)) {
+                    _directoryList.Add(value);
+                }
+                i++;
+            }
+
+            i = 1;
+            foreach (string dir in _directoryList) {
+                EditorUtility.DisplayProgressBar("Fetching Avatar Files", "Creating Folders.", i / _directoryList.Count);
+                Directory.CreateDirectory($"{dir}");
+                //Debug.Log(val);
+                i++;
+            }
+            AssetDatabase.Refresh();
+
+            i = 1;
+            foreach (var path in directories.Paths.Keys) {
+                EditorUtility.DisplayProgressBar("Fetching Avatar Files", "Moving Files.", i / directories.Paths.Count);
+                string fileName = Path.GetFileName(path);
+                Debug.Log($"{path} > {directories.Paths[path]}/{fileName}");
+                AssetDatabase.MoveAsset(path, $"{directories.Paths[path]}/{fileName}");
+                i++;
+            }
+
+
+            EditorUtility.ClearProgressBar();
+
+
         }
-
-
     }
 }
