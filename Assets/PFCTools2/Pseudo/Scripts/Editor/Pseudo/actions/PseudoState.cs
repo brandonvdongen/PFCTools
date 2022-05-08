@@ -22,7 +22,7 @@ namespace PFCTools2.Installer.PseudoParser {
                     Motion clip = Resources.Load<Motion>(clippath);
                     //Debug.Log(clippath);
                     //Debug.Log(clip);
-                    if (clip == null) tokenStream.Exception("Motion " + clippath + " not found!");
+                    if (clip == null) tokenStream.Warning("Motion " + clippath + " not found!");
                     state.motion = clip;
                 }
                 else if (modifier.value.ToLower() == "default") {

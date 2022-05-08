@@ -5,9 +5,9 @@ using UnityEditor;
 using System.IO;
 using System;
 
-namespace PFCTools2.Utils {
-    public class CleanUpTools {
-        [MenuItem("PFCTools/Remove Empty Folders in project")]
+namespace PFCTools2.CleanupTools {
+    public class FolderCleaner {
+        [MenuItem("PFCTools2/Cleanup/Remove All Empty Folders")]
         public static void removeAll() {
             removeEmptyFolders();
         }

@@ -1,3 +1,15 @@
-﻿{
-	"name": "PFCTools"
+{
+    "name": "PFCTools",
+    "references": [
+        "GUID:21332e1f0d937794d916d2402ba1943a"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }

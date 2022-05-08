@@ -53,6 +53,17 @@ namespace PFCTools2.Installer.PseudoParser {
                 throw new Exception(additionalInfo + " | on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos + ( expected != "" ? " expected: " + expected : ""));
             }
         }
+        public void Warning(string additionalInfo = "", string expected = "")
+        {
+            if (additionalInfo == "")
+            {
+               Debug.LogWarning("Unexpected " + _input[index - 1].type + " \"" + _input[index - 1].value + "\", on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos + (expected != "" ? " expected: " + expected : ""));
+            }
+            else
+            {
+                Debug.LogWarning(additionalInfo + " | on Line : " + _input[index - 1].line + " Position : " + _input[index - 1].pos + (expected != "" ? " expected: " + expected : ""));
+            }
+        }
 
     }
 

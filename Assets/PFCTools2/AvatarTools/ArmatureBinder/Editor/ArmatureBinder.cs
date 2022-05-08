@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 using UnityEditor.UIElements;
 using UnityEngine.Animations;
 
-namespace PFCTools2.ArmatureBinder {
+namespace PFCTools2.AvatarTools {
     public class ArmatureBinder : EditorWindow {
-        [MenuItem("PFCTools/Armature Binder")]
+        [MenuItem("PFCTools2/AvatarTools/Armature Binder")]
         public static void ShowWindow() {
             // Opens the window, otherwise focuses it if it’s already open.
             var window = GetWindow<ArmatureBinder>();
