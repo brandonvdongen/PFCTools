@@ -10,7 +10,7 @@ namespace PFCTools2.PhysboneUtils
     public static class PhysBoneUtils
     {
         #region Separate Physbones To Children
-        [MenuItem("PFCTools2/PhysBone Utilities/Separate Bones Into Children")]
+        [MenuItem("PFCTools2/Cleanup/PhysBones/Separate Bones Into Children")]
         public static void SeparatePhysonesToChildren()
         {
             VRCPhysBone[] bones = Selection.activeGameObject.GetComponentsInChildren<VRCPhysBone>();
@@ -25,7 +25,7 @@ namespace PFCTools2.PhysboneUtils
             }
         }
 
-        [MenuItem("PFCTools2/PhysBone Utilities/Separate Bones Into Children", true)]
+        [MenuItem("PFCTools2/Cleanup/PhysBones/Separate Bones Into Children", true)]
         public static bool Validate()
         {
             if (Selection.activeGameObject.GetComponentInChildren<VRCPhysBone>() != null)
@@ -40,7 +40,7 @@ namespace PFCTools2.PhysboneUtils
         #endregion
 
         #region Collect All Physbones to Selected Parent
-        [MenuItem("PFCTools2/PhysBone Utilities/Collect All Physbones")]
+        [MenuItem("PFCTools2/Cleanup/PhysBones/Collect All Physbones")]
         public static void CollectPhysBones()
         {
             GameObject container = new GameObject("Container");
@@ -51,7 +51,12 @@ namespace PFCTools2.PhysboneUtils
             Dictionary<Transform, Transform> gameObjects = new Dictionary<Transform, Transform>();
             foreach (VRCPhysBone bone in bones)
             {
-                Transform root = bone.GetRootTransform();
+                if (bone.rootTransform == null)
+                {
+                    bone.rootTransform = bone.transform;
+                }
+
+                Transform root = bone.rootTransform;
                 HashSet<Transform> path = new HashSet<Transform>();
 
                 Transform current = root;
@@ -82,14 +87,15 @@ namespace PFCTools2.PhysboneUtils
                 }
                 else
                 {
-                    gameObjects[key].parent = Selection.activeTransform;
+                    gameObjects[key].name = "Physbones";
+                    gameObjects[key].parent = descriptor.transform;
                 }
             }
             GameObject.DestroyImmediate(container.gameObject);
 
         }
 
-        [MenuItem("PFCTools2/PhysBone Utilities/Collect All Physbones", true)]
+        [MenuItem("PFCTools2/Cleanup/PhysBones/Collect All Physbones", true)]
         public static bool CollectPhysBonesValidate()
         {
             VRCAvatarDescriptor desc = Selection.activeGameObject.GetComponentInParent<VRCAvatarDescriptor>();
