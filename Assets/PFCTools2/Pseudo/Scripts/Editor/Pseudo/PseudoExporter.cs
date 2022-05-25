@@ -291,7 +291,7 @@ namespace PFCTools2.Installer.PseudoParser
                 }
                 export += layerExport;
             }
-            FileHelper.CreateNewTextFile(animatorController, animatorController.name + "_Export.txt", export, true);
+            FileHelper.CreateNewTextFile(animatorController, animatorController.name + "_Pseudo.txt", export, true);
 
         }
         private static void ProcessTransition(string startName, AnimatorStateTransition transition, List<TransitionData> transitionSets)
