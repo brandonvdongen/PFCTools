@@ -1,14 +1,12 @@
-﻿using System.Collections;
+﻿using PFCTools2.Utils;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEditor.Animations;
-using UnityEngine.Animations;
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using PFCTools2.Utils;
-using UnityEngine.UIElements;
 using UnityEditor.UIElements;
+using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.UIElements;
 
 #if VRC_SDK_VRCSDK3
 using VRC.SDK3.Avatars.Components;
@@ -19,23 +17,21 @@ namespace PFCTools2.CleanupTools
 {
     public class AssetCollectorMenu : EditorWindow
     {
+        private bool validSelection { get { return Selection.activeObject is GameObject; } }
 
-        bool validSelection { get { return Selection.activeObject is GameObject; } }
-
-        static BoolPreferenceHandler includeTextures = new BoolPreferenceHandler("Include Textures", "includeTextures", true);
-        static BoolPreferenceHandler includeMaterials = new BoolPreferenceHandler("Include Materials", "includeMaterials", true);
-        static BoolPreferenceHandler includeMeshes = new BoolPreferenceHandler("Include Meshes", "includeMeshes", true);
-        static BoolPreferenceHandler includeSounds = new BoolPreferenceHandler("Include Sounds", "includeSounds", true);
-        static BoolPreferenceHandler includeAnimations = new BoolPreferenceHandler("Include Animations", "includeAnimations", true);
-        static BoolPreferenceHandler includeShaders = new BoolPreferenceHandler("Include Shaders (DO NOT USE, INCOMPLETE)", "includeShaders", false);
+        private static BoolPreferenceHandler includeTextures = new BoolPreferenceHandler("Include Textures", "includeTextures", true);
+        private static BoolPreferenceHandler includeMaterials = new BoolPreferenceHandler("Include Materials", "includeMaterials", true);
+        private static BoolPreferenceHandler includeMeshes = new BoolPreferenceHandler("Include Meshes", "includeMeshes", true);
+        private static BoolPreferenceHandler includeSounds = new BoolPreferenceHandler("Include Sounds", "includeSounds", true);
+        private static BoolPreferenceHandler includeAnimations = new BoolPreferenceHandler("Include Animations", "includeAnimations", true);
+        private static BoolPreferenceHandler includeShaders = new BoolPreferenceHandler("Include Shaders (DO NOT USE, INCOMPLETE)", "includeShaders", false);
 #if VRC_SDK_VRCSDK3
-        static BoolPreferenceHandler includeVRCFiles = new BoolPreferenceHandler("Include VRC Files", "includeVRC");
+        private static BoolPreferenceHandler includeVRCFiles = new BoolPreferenceHandler("Include VRC Files", "includeVRC");
 #endif
-        static BoolPreferenceHandler moveFiles = new BoolPreferenceHandler("Move Files", "moveFiles", true);
-        static BoolPreferenceHandler makeMovementManifest = new BoolPreferenceHandler("Make Movement Manifest File", "makeManifest", false);
-
-        Button btn_export;
-        Label selectionLabel;
+        private static BoolPreferenceHandler moveFiles = new BoolPreferenceHandler("Move Files", "moveFiles", true);
+        private static BoolPreferenceHandler makeMovementManifest = new BoolPreferenceHandler("Make Movement Manifest File", "makeManifest", false);
+        private Button btn_export;
+        private Label selectionLabel;
 
         [MenuItem("PFCTools2/Cleanup/Asset Collector")]
         public static void OpenWindow()
@@ -85,7 +81,7 @@ namespace PFCTools2.CleanupTools
         private static VisualElement GetPreferences()
         {
             VisualElement root = new VisualElement();
-            foreach (var setting in PreferenceHandler.Preferences.Values)
+            foreach (PreferenceHandler setting in PreferenceHandler.Preferences.Values)
             {
                 if (setting is BoolPreferenceHandler)
                 {
@@ -119,17 +115,32 @@ namespace PFCTools2.CleanupTools
             public Dictionary<string, string> Paths { get => _paths; }
             public void Add(string orgPath, string destPath = "")
             {
-                if (Path.GetDirectoryName(orgPath) == $"Assets/{rootPath}/{destPath}") return;
+                if (orgPath == "" || orgPath == null)
+                {
+                    return;
+                }
+
+                if (Path.GetDirectoryName(orgPath) == $"Assets/{rootPath}/{destPath}")
+                {
+                    return;
+                }
+
                 if (orgPath.Contains("VRCSDK"))
                 {
-                    if (orgPath.Contains("proxy_")) return;
+                    if (orgPath.Contains("proxy_"))
+                    {
+                        return;
+                    }
+
                     if (!_VRCSDKChecked)
                     {
                         _allowVRCSDKFiles = EditorUtility.DisplayDialog("Are you sure?", $"One or more the files in this model were found to be part of the VRCSDK, do you wish to move SDK files (in case they where modified) or leave them in the VRCSDK Folder?\n\n File:{orgPath}", "Move to avatar folder", "leave in VRCSDK folder");
                         _VRCSDKChecked = true;
                     }
-                    if (!_allowVRCSDKFiles) return;
-
+                    if (!_allowVRCSDKFiles)
+                    {
+                        return;
+                    }
                 }
 
                 if (_paths.ContainsKey(orgPath))
@@ -137,16 +148,29 @@ namespace PFCTools2.CleanupTools
                     if (_paths[orgPath] == destPath)
                     {
                         string newPath = Path.GetDirectoryName(destPath);
-                        if (rootPath != "") _paths[orgPath] = $"Assets/{rootPath}/{newPath}/Shared";
-                        else _paths[orgPath] = $"Assets/{rootPath}/{newPath}/Shared";
-
+                        if (rootPath != "")
+                        {
+                            _paths[orgPath] = $"Assets/{rootPath}/{newPath}/Shared";
+                        }
+                        else
+                        {
+                            _paths[orgPath] = $"Assets/{rootPath}/{newPath}/Shared";
+                        }
                     }
                 }
                 else
                 {
                     string path = "Assets";
-                    if (rootPath.Length > 0) path += "/" + rootPath;
-                    if (destPath.Length > 0) path += "/" + destPath;
+                    if (rootPath.Length > 0)
+                    {
+                        path += "/" + rootPath;
+                    }
+
+                    if (destPath.Length > 0)
+                    {
+                        path += "/" + destPath;
+                    }
+
                     _paths.Add(orgPath, path);
                 }
             }
@@ -170,12 +194,12 @@ namespace PFCTools2.CleanupTools
             }
         }
 
-        static void ExportGameObject()
+        private static void ExportGameObject()
         {
 
             System.DateTime startTime = System.DateTime.Now;
 
-            GameObject prefab = Selection.activeGameObject as GameObject;
+            GameObject prefab = Selection.activeGameObject;
             DirectoryTable directories = new DirectoryTable(prefab.name);
             bool cancel;
             cancel = EditorUtility.DisplayCancelableProgressBar("Fetching Avatar Files", "Processing Avatar.", 0);
@@ -204,9 +228,20 @@ namespace PFCTools2.CleanupTools
                 {
                     foreach (Material _material in _renderer.sharedMaterials)
                     {
-                        if (includeMaterials.cachedValue) directories.Add(_material, "Materials");
-                        if (includeTextures.cachedValue) getTexturesFromMaterial(directories, _material);
-                        if (includeShaders.cachedValue) getShaderFromMaterial(directories, _material);
+                        if (includeMaterials.cachedValue)
+                        {
+                            directories.Add(_material, "Materials");
+                        }
+
+                        if (includeTextures.cachedValue)
+                        {
+                            getTexturesFromMaterial(directories, _material);
+                        }
+
+                        if (includeShaders.cachedValue)
+                        {
+                            getShaderFromMaterial(directories, _material);
+                        }
                     }
                 }
                 if (includeMeshes.cachedValue)
@@ -237,7 +272,7 @@ namespace PFCTools2.CleanupTools
                         }
                         else if (psr.GetMeshes(meshes) > 0)
                         {
-                            foreach (var mesh in meshes)
+                            foreach (Mesh mesh in meshes)
                             {
                                 directories.Add(mesh, "Models");
                             }
@@ -249,7 +284,7 @@ namespace PFCTools2.CleanupTools
             //Get Sounds
             if (includeSounds.cachedValue)
             {
-                foreach (var a in prefab.GetComponentsInChildren<AudioSource>(true))
+                foreach (AudioSource a in prefab.GetComponentsInChildren<AudioSource>(true))
                 {
                     directories.Add(a.clip, "Sound");
                 }
@@ -292,7 +327,7 @@ namespace PFCTools2.CleanupTools
                 List<ConstraintSource> sources = new List<ConstraintSource>();
                 constraint.GetSources(sources);
 
-                foreach (var source in sources)
+                foreach (ConstraintSource source in sources)
                 {
                     if (source.sourceTransform.gameObject.scene.path == null)
                     {
@@ -307,11 +342,11 @@ namespace PFCTools2.CleanupTools
                 VRCAvatarDescriptor descriptor = prefab.GetComponent<VRCAvatarDescriptor>();
                 if (descriptor)
                 {
-                    foreach (var layer in descriptor.baseAnimationLayers)
+                    foreach (VRCAvatarDescriptor.CustomAnimLayer layer in descriptor.baseAnimationLayers)
                     {
                         ProcessAnimatorController(directories, layer.animatorController as AnimatorController);
                     }
-                    foreach (var layer in descriptor.specialAnimationLayers)
+                    foreach (VRCAvatarDescriptor.CustomAnimLayer layer in descriptor.specialAnimationLayers)
                     {
                         ProcessAnimatorController(directories, layer.animatorController as AnimatorController);
                     }
@@ -357,7 +392,7 @@ namespace PFCTools2.CleanupTools
 
             //Move Files
             i = 1;
-            foreach (var path in directories.Paths.Keys)
+            foreach (string path in directories.Paths.Keys)
             {
                 EditorUtility.DisplayCancelableProgressBar("Moving Avatar Files", path, i / directories.Paths.Keys.Count);
                 string fileName = Path.GetFileName(path);
@@ -365,21 +400,40 @@ namespace PFCTools2.CleanupTools
                 if (moveFiles.cachedValue)
                 {
                     AssetDatabase.MoveAsset(path, destPath);
-                    if (path != destPath) lines.Add($"{lines.Count}: {path} >>> {destPath}");
+                    if (path != destPath)
+                    {
+                        lines.Add($"{lines.Count}: {path} >>> {destPath}");
+                    }
                 }
                 else
                 {
-                    if(lines.Count == 0)lines.Add($"Root: {path}");
-                    else lines.Add($"{lines.Count}: {path}");
+                    if (lines.Count == 0)
+                    {
+                        lines.Add($"Root: {path}");
+                    }
+                    else
+                    {
+                        lines.Add($"{lines.Count}: {path}");
+                    }
                 }
                 i++;
             }
             if (makeMovementManifest.cachedValue && lines.Count > 0)
             {
-                if (moveFiles.cachedValue)File.WriteAllLines(Path.GetDirectoryName(AssetDatabase.GetAssetPath(root)) + "/MoveManifest.txt", lines);
-                else File.WriteAllLines("Assets/MoveManifest.txt", lines);
+                if (moveFiles.cachedValue)
+                {
+                    File.WriteAllLines(Path.GetDirectoryName(AssetDatabase.GetAssetPath(root)) + "/MoveManifest.txt", lines);
+                }
+                else
+                {
+                    File.WriteAllLines("Assets/MoveManifest.txt", lines);
+                }
             }
-            if (moveFiles.cachedValue)Selection.activeObject = root;
+            if (moveFiles.cachedValue)
+            {
+                Selection.activeObject = root;
+            }
+
             EditorUtility.ClearProgressBar();
             System.TimeSpan Time = System.DateTime.Now.Subtract(startTime);
             Debug.Log($"Processed avatar: {prefab.name} Took {Time.TotalMinutes:0}:{Time.Seconds:00}Minutes");
@@ -435,13 +489,21 @@ namespace PFCTools2.CleanupTools
 
         private static void ProcessAnimatorController(DirectoryTable directories, AnimatorController controller)
         {
-            if (controller == null) return;
+            if (controller == null)
+            {
+                return;
+            }
+
             directories.Add(controller, "Controllers");
             if (controller.animationClips.Length > 0)
             {
-                foreach (var layer in controller.layers)
+                foreach (AnimatorControllerLayer layer in controller.layers)
                 {
-                    if (layer.stateMachine.name == "") layer.stateMachine.name = layer.name;
+                    if (layer.stateMachine.name == "")
+                    {
+                        layer.stateMachine.name = layer.name;
+                    }
+
                     ProcessStateMachine(directories, layer.stateMachine);
                 }
             }
@@ -451,14 +513,18 @@ namespace PFCTools2.CleanupTools
         {
 
             path = path == "" ? stateMachine.name : $"{path}/{stateMachine.name}";
-            foreach (var childState in stateMachine.states)
+            foreach (ChildAnimatorState childState in stateMachine.states)
             {
                 Motion anim = childState.state.motion;
-                if (anim == null) continue;
+                if (anim == null)
+                {
+                    continue;
+                }
+
                 processMotion(directories, anim, path);
             }
 
-            foreach (var childStateMachine in stateMachine.stateMachines)
+            foreach (ChildAnimatorStateMachine childStateMachine in stateMachine.stateMachines)
             {
                 ProcessStateMachine(directories, childStateMachine.stateMachine, path);
             }
@@ -482,7 +548,7 @@ namespace PFCTools2.CleanupTools
             {
                 directories.Add(blendTree, $"Animations/{path}/{blendTree.name}");
             }
-            foreach (var childMotion in blendTree.children)
+            foreach (ChildMotion childMotion in blendTree.children)
             {
                 processMotion(directories, childMotion.motion, path + "/" + blendTree.name);
             }
@@ -490,18 +556,32 @@ namespace PFCTools2.CleanupTools
 
         private static void processAnimationClip(DirectoryTable directories, AnimationClip anim, string path = "")
         {
-            if (path != "" && path != null) directories.Add(anim, $"Animations/{path}");
-            else directories.Add(anim, "Animations");
+            if (path != "" && path != null)
+            {
+                directories.Add(anim, $"Animations/{path}");
+            }
+            else
+            {
+                directories.Add(anim, "Animations");
+            }
+
             EditorCurveBinding[] bindings = AnimationUtility.GetObjectReferenceCurveBindings(anim);
-            foreach (var binding in bindings)
+            foreach (EditorCurveBinding binding in bindings)
             {
                 ObjectReferenceKeyframe[] keyframes = AnimationUtility.GetObjectReferenceCurve(anim, binding);
 
-                foreach (var keyframe in keyframes)
+                foreach (ObjectReferenceKeyframe keyframe in keyframes)
                 {
-                    if (includeMaterials.cachedValue) directories.Add(keyframe.value, $"Materials/{path}");
+                    if (includeMaterials.cachedValue)
+                    {
+                        directories.Add(keyframe.value, $"Materials/{path}");
+                    }
+
                     getTexturesFromMaterial(directories, keyframe.value as Material);
-                    if (includeShaders.cachedValue) getShaderFromMaterial(directories, keyframe.value as Material);
+                    if (includeShaders.cachedValue)
+                    {
+                        getShaderFromMaterial(directories, keyframe.value as Material);
+                    }
                 }
 
             }

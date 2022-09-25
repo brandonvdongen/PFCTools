@@ -25,9 +25,9 @@ namespace PFCTools2.Installer.Core
         public virtual Dictionary<string, MetaData> MetaData { get; }
         public abstract string PrefabName { get; }
         public abstract string PrefabTag { get; }
+        public virtual string[] ComponentTags { get; }
 
-
-
+        //Installer functions
         [OnOpenAsset()]
         public static bool OpenAssetEditor(Int32 instanceID, Int32 line)
         {
@@ -44,16 +44,17 @@ namespace PFCTools2.Installer.Core
             }
             return false;
         }
-
-        public virtual VisualElement PrefabConfigUI()
+        //UI WINDOWS
+        public virtual VisualElement PrefabConfigUI(PrefabInstallerWindow installer)
         {
             return new Label("No Settings available for this prefab.");
         }
-        public virtual VisualElement CustomizerUI()
+        public virtual VisualElement CustomizerUI(PrefabInstallerWindow installer)
         {
             return new Label("No Customizer available for this prefab.");
         }
 
+        //VALIDATION AND COMPONENT HANDLING
         public virtual bool IsInstalledOn(AvatarDefinition avatar)
         {
             return GetInstalledPrefab(avatar) != null;
@@ -72,12 +73,30 @@ namespace PFCTools2.Installer.Core
             return null;
         }
 
-        public virtual void Validate(List<ValidatorResponse> log, InstallerMode mode) { }
+        public virtual HashSet<GameObject> GetPrefabComponents(AvatarDefinition avatar)
+        {
+            Transform[] children = avatar.transform.GetComponentsInChildren<Transform>();
+            HashSet<GameObject> gameObjects = new HashSet<GameObject>();
+            foreach (Transform child in children)
+            {
+                foreach (string tag in ComponentTags)
+                {
+                    if (child.CompareTag(tag))
+                    {
+                        gameObjects.Add(child.gameObject);
+                    }
+                }
+            }
+            return gameObjects;
+        }
+
+        public virtual void Validate(PrefabInstallerWindow installer) { }
         private void OnValidate()
         {
             OnConfigChange?.Invoke();
         }
 
+        //META DATA
         public virtual List<string> GetMetaTags()
         {
             return new List<string>();
@@ -87,29 +106,18 @@ namespace PFCTools2.Installer.Core
             return new Dictionary<string, MetaData>();
         }
 
-        public virtual void BeforePrefabRemove() { }
-        public virtual void AfterPrefabRemove() { }
+        //Events
+        public virtual void BeforePrefabRemove(PrefabInstallerWindow installer) { }
+        public virtual void AfterPrefabRemove(PrefabInstallerWindow installer) { }
 
-        private void OnEnable()
-        {
-            SceneView.duringSceneGui += DrawGui;
-            OnGizmo += DrawGizmos;
-        }
+        //GUI HANDLING
+        public virtual void DrawGUI(PrefabInstallerWindow installer) { }
 
-        private void OnDisable()
-        {
-            SceneView.duringSceneGui -= DrawGui;
-            OnGizmo -= DrawGizmos;
-        }
-
-        public virtual void DrawGui(SceneView obj) { }
-
-        [DrawGizmo(GizmoType.Selected | GizmoType.NotInSelectionHierarchy)]
-        public static void OnDrawGizmo(Transform scr, GizmoType gizmoType)
-        {
-            if (canDrawGizmos) { OnGizmo?.Invoke(); }
-        }
-        public virtual void DrawGizmos() { }
+        //[DrawGizmo(GizmoType.Selected | GizmoType.NotInSelectionHierarchy)]
+        //internal static void OnDrawGizmo(Transform scr, GizmoType gizmoType)
+        //{
+        //if (canDrawGizmos) { OnGizmo?.Invoke(); }
+        //}
+        public virtual void DrawGizmos(PrefabInstallerWindow installer) { }
     }
-
 }

@@ -12,6 +12,7 @@ namespace PFCTools2.Installer.PseudoDebugger
 {
     public class PseudoDebugger : EditorWindow
     {
+        private static BoolPreferenceHandler AllowNonResourceFiles = new BoolPreferenceHandler("Allow files outside of resource folders", "PSD_AllowNonResourceFiles", false);
 
         [MenuItem("PFCTools2/Pseudo/Debugger")]
         public static void ShowWindow()
@@ -37,7 +38,6 @@ namespace PFCTools2.Installer.PseudoDebugger
             VisualElement root = rootVisualElement;
             StyleSheet styleSheet = Resources.Load<StyleSheet>("PFCTools2/PrefabInstaller/BaseStyle");
             root.styleSheets.Add(styleSheet);
-
             VisualElement debugWindow = new VisualElement();
             Button createPseudoBtn = new Button() { text = "New Text Asset" };
             createPseudoBtn.clicked += () => { FileHelper.CreateNewTextFile("Assets/Empty.txt", ""); };
@@ -60,7 +60,7 @@ namespace PFCTools2.Installer.PseudoDebugger
             {
                 if (controllerField.value != null)
                 {
-                    PseudoExporter.Export(controllerField.value as AnimatorController);
+                    PseudoExporter.Export(controllerField.value as AnimatorController, AllowNonResourceFiles.cachedValue);
                 }
             };
 
@@ -70,6 +70,16 @@ namespace PFCTools2.Installer.PseudoDebugger
             debugWindow.Add(testPseudoBtn);
             debugWindow.Add(exportStateDataBtn);
 
+
+            Toggle AllowNonResourceFilesBtn = new Toggle();
+            AllowNonResourceFilesBtn.text = AllowNonResourceFiles.name;
+            AllowNonResourceFilesBtn.value = AllowNonResourceFiles.IsEnabled;
+            AllowNonResourceFilesBtn.RegisterValueChangedCallback((e) =>
+            {
+                AllowNonResourceFiles.IsEnabled = e.newValue;
+            });
+
+            debugWindow.Add(AllowNonResourceFilesBtn);
 
             root.Add(debugWindow);
 

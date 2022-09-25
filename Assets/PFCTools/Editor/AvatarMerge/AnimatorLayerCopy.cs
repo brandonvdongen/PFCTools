@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if UNITY_EDITOR
+using System;
 using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
@@ -548,3 +549,5 @@ namespace PFCTools.Utils
     }
 
 }
+
+#endif

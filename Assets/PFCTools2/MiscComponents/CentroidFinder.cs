@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace PFCTools2.Utils
+namespace PFCTools2.Components
 {
     [ExecuteInEditMode]
     public class CentroidFinder : MonoBehaviour

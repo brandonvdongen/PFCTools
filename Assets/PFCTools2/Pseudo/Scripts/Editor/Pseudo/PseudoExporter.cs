@@ -11,7 +11,7 @@ namespace PFCTools2.Installer.PseudoParser
 {
     public class PseudoExporter
     {
-        internal static void Export(AnimatorController animatorController)
+        internal static void Export(AnimatorController animatorController, bool allowNonResources = false)
         {
             string export = "";
             ControllerContext Context = new ControllerContext(animatorController);
@@ -75,14 +75,14 @@ namespace PFCTools2.Installer.PseudoParser
                         path = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path);
                         List<string> parts = new List<string>(path.Split(char.Parse("\\")));
                         int index = parts.IndexOf("Resources");
-                        if (index != -1)
+                        if (index != -1 || allowNonResources)
                         {
                             index++;
                             path = string.Join("/", parts.GetRange(index, parts.Count - index));
                         }
                         else
                         {
-                            throw new Exception("Path is not in a Resources folder, the pseudo parser only accepts paths that are in a resource folder for auto installer failsafe reasons.");
+                            throw new Exception($"Path {path} is not in a Resources folder, the pseudo parser only accepts paths that are in a resource folder for auto installer failsafe reasons.");
                         }
 
                         layerExport += "motion \"" + path + "\"\n";

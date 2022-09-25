@@ -5,7 +5,7 @@ namespace PFCTools2.Installer.Core
 {
 
     [CustomEditor(typeof(PrefabTemplate), true)]
-    public class PrefabInstallerEditor : Editor
+    public class PrefabTemplateEditor : Editor
     {
         private PrefabTemplate template;
         public override VisualElement CreateInspectorGUI()

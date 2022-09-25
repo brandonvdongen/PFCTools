@@ -18,21 +18,22 @@ namespace PFCTools2.Installer.Core
         //Operating params
         private bool loaded = false;
         private bool isValid = false;
-        private bool isFocused = false;
         private AvatarDefinition currentAvatar;
-        private InstallerMode mode = InstallerMode.Intall;
+        public InstallerMode Mode { get; private set; }
+        public List<ValidatorResponse> Log { get { return validatorLog; } }
+        public AvatarDefinition Avatar { get { return currentAvatar; } }
+        private PrefabTemplate Template;
 
         //UI Elements
         private VisualElement avatarListContainer;
         private VisualElement configContainer;
         private VisualElement customizerContainer;
         private Button InstallBtn;
-        private PrefabTemplate template;
+
 
         //Debug Info
         private ScrollView ErrorList;
-        private static List<ValidatorResponse> validatorLog = new List<ValidatorResponse>();
-        private GameObject gizmoDelegate;
+        private List<ValidatorResponse> validatorLog = new List<ValidatorResponse>();
 
 #if PFCTOOLSDEBUG
         [MenuItem("PFCTools2/Debug/ClearWindow/PrefabInstallerWindow")]
@@ -53,9 +54,9 @@ namespace PFCTools2.Installer.Core
         public static void OpenWindow(PrefabTemplate target)
         {
             // Get existing open window or if none, make a new one:
-            //PrefabInstallerWindow window = (PrefabInstallerWindow)EditorWindow.GetWindow(typeof(PrefabInstallerWindow), false, "Prefab Installer");
-            PrefabInstallerWindow window = CreateInstance<PrefabInstallerWindow>();
-            window.template = target;
+            PrefabInstallerWindow window = (PrefabInstallerWindow)EditorWindow.GetWindow(typeof(PrefabInstallerWindow), false, "Prefab Installer");
+            //PrefabInstallerWindow window = CreateInstance<PrefabInstallerWindow>();
+            window.Template = target;
             window.titleContent = new GUIContent(target.PrefabName + " Installer");
             window.Show();
             VRCAvatarDescriptor[] descriptors = FindObjectsOfType<VRCAvatarDescriptor>();
@@ -86,16 +87,16 @@ namespace PFCTools2.Installer.Core
         }
         private void OnTargetChange()
         {
-            SerializedObject SO = new SerializedObject(template);
+            SerializedObject SO = new SerializedObject(Template);
             //Setup Config Window
             configContainer.Clear();
-            VisualElement configUI = template.PrefabConfigUI();
+            VisualElement configUI = Template.PrefabConfigUI(this);
             configContainer.Add(configUI);
             configUI.Bind(SO);
 
             //Setup Customizer Window
             customizerContainer.Clear();
-            VisualElement customizerUI = template.CustomizerUI();
+            VisualElement customizerUI = Template.CustomizerUI(this);
             customizerContainer.Add(customizerUI);
             customizerUI.Bind(SO);
         }
@@ -174,14 +175,14 @@ namespace PFCTools2.Installer.Core
                 return;
             }
 
-            if (mode == InstallerMode.Intall)
+            if (Mode == InstallerMode.Intall)
             {
                 InstallBtn.text = "Install Prefab";
                 configContainer.style.display = DisplayStyle.Flex;
                 customizerContainer.style.display = DisplayStyle.None;
                 InstallBtn.SetEnabled(isValid);
             }
-            if (mode == InstallerMode.Modify)
+            if (Mode == InstallerMode.Modify)
             {
                 InstallBtn.text = "Remove Prefab";
                 configContainer.style.display = DisplayStyle.None;
@@ -211,9 +212,9 @@ namespace PFCTools2.Installer.Core
                 if (!currentAvatar.HasParameters) { validatorLog.Add(new ValidatorResponse("No expression parameters found", "This avatar seems to not have a expression parameter asset assigned in the descriptor. The installer will create a new parameter asset to use if you decide to continue.", ValidatorResponseType.warning)); }
                 if (!currentAvatar.HasMenu) { validatorLog.Add(new ValidatorResponse("No expression menu found", "This avatar seems to not have a expression menu asset assigned in the descriptor. The installer will create a new menu asset to use if you decide to continue.", ValidatorResponseType.warning)); }
 
-                foreach (string path in template.RequiredResourcePaths)
+                foreach (string path in Template.RequiredResourcePaths)
                 {
-                    if (Resources.LoadAll(template.PrefabName + "/" + path).Length == 0) { validatorLog.Add(new ValidatorResponse("Missing Resources", $"It appears you moved the {path} folder out of it's parent Resources folder.\nFor the installer to function properly the {path} folder has to be inside any Resources folder with the following path:\n\nResources/{template.PrefabName}/{path}", ValidatorResponseType.error)); }
+                    if (Resources.LoadAll(Template.PrefabName + "/" + path).Length == 0) { validatorLog.Add(new ValidatorResponse("Missing Resources", $"It appears you moved the {path} folder out of it's parent Resources folder.\nFor the installer to function properly the {path} folder has to be inside any Resources folder with the following path:\n\nResources/{Template.PrefabName}/{path}", ValidatorResponseType.error)); }
                 }
 
 
@@ -223,17 +224,17 @@ namespace PFCTools2.Installer.Core
                 return false;
             }
 
-            if (template.IsInstalledOn(currentAvatar))
+            if (Template.IsInstalledOn(currentAvatar))
             {
-                mode = InstallerMode.Modify;
-                validatorLog.Add(new ValidatorResponse("Existing Install Found", "An existing installation of this prefab has been found on the selected avatar.", ValidatorResponseType.notice));
+                Mode = InstallerMode.Modify;
+                //validatorLog.Add(new ValidatorResponse("Existing Install Found", "An existing installation of this prefab has been found on the selected avatar.", ValidatorResponseType.notice));
             }
             else
             {
-                mode = InstallerMode.Intall;
+                Mode = InstallerMode.Intall;
             }
 
-            template.Validate(validatorLog, mode);
+            Template.Validate(this);
 
             isValid = true;
             foreach (ValidatorResponse log in validatorLog)
@@ -265,12 +266,13 @@ namespace PFCTools2.Installer.Core
 
         private void ProcessPrefab()
         {
-            if (mode == InstallerMode.Intall)
+            if (Mode == InstallerMode.Intall)
             {
-                List<string> metaTags = template.GetMetaTags();
-                Dictionary<string, MetaData> metaData = template.GetMetaData();
-                GameObject Prefab = PrefabUtility.InstantiatePrefab(template.Prefab) as GameObject;
+                List<string> metaTags = Template.GetMetaTags();
+                Dictionary<string, MetaData> metaData = Template.GetMetaData();
+                GameObject Prefab = PrefabUtility.InstantiatePrefab(Template.Prefab) as GameObject;
                 Prefab.transform.parent = currentAvatar.transform;
+                Prefab.transform.localPosition = Vector3.zero;
 
                 List<ConstraintAssigner> constraintAssigner = new List<ConstraintAssigner>(Prefab.GetComponentsInChildren<ConstraintAssigner>());
                 foreach (ConstraintAssigner assigner in constraintAssigner)
@@ -308,7 +310,6 @@ namespace PFCTools2.Installer.Core
                     if (assigner.Mode == PositionAssignerMode.MetaData)
                     {
                         MetaData<Vector3> data = metaData[assigner.MetaDataKey] as MetaData<Vector3>;
-                        Debug.Log(data.Value);
                         assigner.transform.position = data.Value;
                     }
                     else
@@ -350,7 +351,7 @@ namespace PFCTools2.Installer.Core
                 AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX);
                 if (EditorUtility.DisplayDialog("Animator Layer Import", "Would you like to import the prefab's Animation layers into your avatar's animator?\n(A backup of your animator will be made just in case)", "Import Animation Layers", "Skip Import"))
                 {
-                    if (template.FXLayers.Length > 0 && controller != null)
+                    if (Template.FXLayers.Length > 0 && controller != null)
                     {
 
                         string path = AssetDatabase.GetAssetPath(controller);
@@ -363,25 +364,25 @@ namespace PFCTools2.Installer.Core
                         }
                         string newPath = AssetDatabase.GenerateUniqueAssetPath($"{directory}/Backups/{filename}Backup({DateTime.Now:MM-dd-yy:H:mm:ss}){extension}");
                         AssetDatabase.CopyAsset(path, newPath);
-                        foreach (TextAsset pseudoFile in template.FXLayers)
+                        foreach (TextAsset pseudoFile in Template.FXLayers)
                         {
                             Pseudo.Parse(pseudoFile, currentAvatar, currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX));
                         }
                     }
                 }
             }
-            else if (mode == InstallerMode.Modify)
+            else if (Mode == InstallerMode.Modify)
             {
-                GameObject prefab = template.GetInstalledPrefab(currentAvatar);
-                template.BeforePrefabRemove();
+                GameObject prefab = Template.GetInstalledPrefab(currentAvatar);
+                Template.BeforePrefabRemove(this);
                 DestroyImmediate(prefab);
-                template.AfterPrefabRemove();
+                Template.AfterPrefabRemove(this);
                 AnimatorController controller = currentAvatar.GetLayer(VRCAvatarDescriptor.AnimLayerType.FX);
                 if (controller)
                 {
                     if (EditorUtility.DisplayDialog("Delete Imported Layers", "Would you like to Delete the prefab's animation layers from your avatar's animator?\n(A backup of your animator will be made just in case)", "Delete Layers", "Keep Layers"))
                     {
-                        if (template.FXLayers.Length > 0 && controller != null)
+                        if (Template.FXLayers.Length > 0 && controller != null)
                         {
                             string path = AssetDatabase.GetAssetPath(controller);
                             string directory = Path.GetDirectoryName(path);
@@ -393,7 +394,7 @@ namespace PFCTools2.Installer.Core
                             }
                             string newPath = AssetDatabase.GenerateUniqueAssetPath($"{directory}/Backups/{filename}Backup({DateTime.Now:MM-dd-yy:H:mm:ss}){extension}");
                             AssetDatabase.CopyAsset(path, newPath);
-                            foreach (TextAsset pseudoFile in template.FXLayers)
+                            foreach (TextAsset pseudoFile in Template.FXLayers)
                             {
                                 Pseudo.Remove(pseudoFile, currentAvatar, controller);
                             }
