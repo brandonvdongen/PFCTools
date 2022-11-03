@@ -1,0 +1,16 @@
+{
+    "name": "PFCTools.old",
+    "references": [
+        "GUID:21332e1f0d937794d916d2402ba1943a",
+        "GUID:49f992a03dd1dfe4abab2a5440e5d460"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
